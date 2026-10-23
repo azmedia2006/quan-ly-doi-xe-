@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Fuel, Plus, Search, Trash2, DollarSign, Receipt } from 'lucide-react';
+import { Fuel, Plus, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Expense, Vehicle, Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -69,22 +69,60 @@ export const ExpensesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Fuel className="w-6 h-6 text-amber-500" /> Quản Lý Nhiên Liệu & Chi Phí (Expenses)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Fuel className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" /> Quản Lý Nhiên Liệu & Chi Phí (Expenses)
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Theo dõi hóa đơn mua xăng dầu, phí BOT đường bộ, tiền bến bãi đỗ xe và định mức tiêu hao.
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+            Theo dõi xăng dầu, vé trạm thu phí BOT, bến bãi và định mức tiêu hao.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" /> Ghi Nhận Chi Phí
         </Button>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {expenses.map((e) => (
+          <div key={e.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="font-black text-base text-slate-900 dark:text-slate-100">
+                  {Number(e.amount).toLocaleString('vi-VN')} ₫
+                </span>
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-0.5">{e.vehicle_plate}</p>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                {e.category_display || e.category}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div>Ngày: <strong className="text-slate-800 dark:text-slate-200">{new Date(e.expense_date).toLocaleDateString('vi-VN')}</strong></div>
+              <div>Tài xế: <strong className="text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</strong></div>
+              <div>Nhiên liệu: <strong className="text-blue-600 dark:text-blue-400">{e.liters ? `${e.liters} L` : '—'}</strong></div>
+              <div>Hóa đơn: <strong className="font-mono text-slate-800 dark:text-slate-200">{e.invoice_number || '—'}</strong></div>
+            </div>
+
+            {e.notes && <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800 truncate">{e.notes}</p>}
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                onClick={() => handleDelete(e.id)}
+                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Xóa chi phí
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
@@ -141,7 +179,7 @@ export const ExpensesPage: React.FC = () => {
       {/* Modal Thêm Chi Phí */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Ghi Nhận Chi Phí Phát Sinh">
         <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Xe *</label>
               <select
@@ -168,7 +206,7 @@ export const ExpensesPage: React.FC = () => {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Khoản mục chi phí</label>
               <select
@@ -191,7 +229,7 @@ export const ExpensesPage: React.FC = () => {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Số lít nhiên liệu (nếu có)"
               type="number"

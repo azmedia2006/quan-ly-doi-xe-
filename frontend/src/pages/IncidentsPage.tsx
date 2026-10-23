@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Plus, Search, Trash2, ShieldCheck, MapPin } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Incident, Vehicle, Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -70,22 +70,62 @@ export const IncidentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <AlertTriangle className="w-6 h-6 text-rose-600" /> Sự Cố & Bảo Hiểm (Incidents)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" /> Sự Cố & Bảo Hiểm (Incidents)
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Ghi nhận tai nạn, va quẹt, hư hỏng đột xuất trên đường và quy trình thẩm định bảo hiểm bồi thường.
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+            Ghi nhận va quẹt, tai nạn, cứu hộ trên đường và thẩm định bồi thường.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" /> Khai Báo Sự Cố
         </Button>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {incidents.map((inc) => (
+          <div key={inc.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="font-black text-sm text-slate-900 dark:text-slate-100">{inc.incident_code}</span>
+                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5">{inc.vehicle_plate}</p>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                inc.severity === 'HIGH' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' :
+                inc.severity === 'MEDIUM' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+              }`}>
+                {inc.severity_display || inc.severity}
+              </span>
+            </div>
+
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{inc.location}</p>
+            <p className="text-[11px] text-slate-500">{inc.description}</p>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div>Bồi thường: <strong className="text-emerald-600 font-bold">{Number(inc.insurance_claim_amount).toLocaleString('vi-VN')} ₫</strong></div>
+              <div>Trạng thái: <strong className="text-slate-800 dark:text-slate-200">{inc.status_display || inc.status}</strong></div>
+              <div className="col-span-2">Tài xế: <strong className="text-slate-800 dark:text-slate-200">{inc.driver_name || '—'}</strong></div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                onClick={() => handleDelete(inc.id)}
+                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Xóa sự cố
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
@@ -156,7 +196,7 @@ export const IncidentsPage: React.FC = () => {
             placeholder="VD: INC-2026-99"
             required
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Xe *</label>
               <select
@@ -183,7 +223,7 @@ export const IncidentsPage: React.FC = () => {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Địa điểm xảy ra *"
               value={form.location}

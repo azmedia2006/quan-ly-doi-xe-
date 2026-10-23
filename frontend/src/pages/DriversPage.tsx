@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Search, Trash2, Award, Phone, ShieldCheck } from 'lucide-react';
+import { Users, Plus, Search, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -69,25 +69,25 @@ export const DriversPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Users className="w-6 h-6 text-emerald-600" /> Quản Lý Tài Xế (Drivers)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" /> Quản Lý Tài Xế (Drivers)
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Lưu trữ hồ sơ tài xế, phân hạng giấy phép lái xe (B2, C, FC), thâm niên và trạng thái phân công.
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+            Hồ sơ tài xế, phân hạng GPLX (B2, C, FC) và đánh giá chất lượng.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" /> Thêm Tài Xế Mới
         </Button>
       </div>
 
       {/* Filter Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-400" />
+      <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+        <Search className="w-4 h-4 text-slate-400 shrink-0" />
         <input
           type="text"
           value={search}
@@ -98,23 +98,23 @@ export const DriversPage: React.FC = () => {
       </div>
 
       {/* Grid of Drivers Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {filtered.map((d) => (
-          <div key={d.id} className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+          <div key={d.id} className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <img
                     src={d.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.driver_code}`}
                     alt={d.full_name}
-                    className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 object-cover"
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 object-cover shrink-0"
                   />
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{d.full_name}</h3>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{d.full_name}</h3>
                     <p className="text-[11px] font-mono text-blue-600 font-semibold">{d.driver_code}</p>
                   </div>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                   d.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
                   d.status === 'ON_TRIP' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
                   'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
@@ -123,7 +123,7 @@ export const DriversPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="mt-4 space-y-2 text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
+              <div className="mt-3 space-y-1.5 text-xs border-t border-slate-100 dark:border-slate-800 pt-2.5">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Số GPLX:</span>
                   <span className="font-semibold text-slate-700 dark:text-slate-300">{d.license_number} ({d.license_class})</span>
@@ -137,19 +137,19 @@ export const DriversPage: React.FC = () => {
                   <span className="font-semibold text-slate-700 dark:text-slate-300">{d.experience_years} năm</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Đánh giá chất lượng:</span>
+                  <span className="text-slate-400">Đánh giá sao:</span>
                   <span className="font-bold text-amber-500">★ {d.rating} / 5.0</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => handleDelete(d.id)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
                 title="Xóa tài xế"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" /> Xóa tài xế
               </button>
             </div>
           </div>
@@ -159,7 +159,7 @@ export const DriversPage: React.FC = () => {
       {/* Modal Thêm Tài Xế */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm Hồ Sơ Tài Xế">
         <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Mã tài xế *"
               value={form.driver_code}
@@ -175,7 +175,7 @@ export const DriversPage: React.FC = () => {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Số điện thoại *"
               value={form.phone}
@@ -191,7 +191,7 @@ export const DriversPage: React.FC = () => {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Số GPLX *"
               value={form.license_number}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarDays, Plus, Search, Trash2, ArrowRight, MapPin, Truck } from 'lucide-react';
+import { CalendarDays, Plus, Search, Trash2, ArrowRight, MapPin } from 'lucide-react';
 import api from '../services/api';
 import { TripSchedule, Vehicle, Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -71,22 +71,64 @@ export const SchedulesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <CalendarDays className="w-6 h-6 text-amber-600" /> Điều Phối & Lịch Trình (Schedules)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" /> Điều Phối & Lịch Trình (Schedules)
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Điều hành phân công xe, tài xế, điểm giao nhận và kiểm soát tiến độ vận chuyển hàng hóa.
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+            Điều hành phân công xe, tài xế, điểm giao nhận và kiểm soát tiến độ chuyến.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" /> Lập Chuyến Mới
         </Button>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {schedules.map((s) => (
+          <div key={s.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="font-black text-sm text-slate-900 dark:text-slate-100">{s.trip_code}</span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                s.status === 'DISPATCHED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
+                s.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+              }`}>
+                {s.status_display || s.status}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span className="truncate">{s.origin}</span>
+              <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="truncate">{s.destination}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div>Xe: <strong className="text-blue-600 dark:text-blue-400">{s.vehicle_plate}</strong></div>
+              <div>Tài xế: <strong className="text-slate-800 dark:text-slate-200">{s.driver_name}</strong></div>
+              <div>Hàng: <strong className="text-slate-800 dark:text-slate-200">{s.cargo_description}</strong> ({s.cargo_weight}T)</div>
+              <div>Khởi hành: <strong className="text-slate-800 dark:text-slate-200">{new Date(s.departure_time).toLocaleDateString('vi-VN')}</strong></div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                onClick={() => handleDelete(s.id)}
+                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Hủy chuyến
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
@@ -164,7 +206,7 @@ export const SchedulesPage: React.FC = () => {
             placeholder="VD: TRIP-2026-99"
             required
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Xe vận tải *</label>
               <select
@@ -192,7 +234,7 @@ export const SchedulesPage: React.FC = () => {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Điểm xuất phát *"
               value={form.origin}
@@ -208,7 +250,7 @@ export const SchedulesPage: React.FC = () => {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Mô tả hàng hóa *"
               value={form.cargo_description}

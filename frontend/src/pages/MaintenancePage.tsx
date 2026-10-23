@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, Search, Trash2, ShieldCheck, DollarSign } from 'lucide-react';
+import { Wrench, Plus, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { MaintenanceRecord, Vehicle } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -67,22 +67,62 @@ export const MaintenancePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Wrench className="w-6 h-6 text-purple-600" /> Bảo Dưỡng & Sửa Chữa (Maintenance)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" /> Bảo Dưỡng & Sửa Chữa (Maintenance)
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Theo dõi lịch sử bảo trì định kỳ theo ODO, thay thế phụ tùng, kiểm định an toàn và chi phí garage.
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+            Theo dõi bảo trì theo ODO, thay thế phụ tùng, xưởng thực hiện và chi phí.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" /> Tạo Phiếu Bảo Dưỡng
         </Button>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {records.map((r) => (
+          <div key={r.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="font-black text-sm text-slate-900 dark:text-slate-100">{r.maintenance_code}</span>
+                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5">{r.vehicle_plate}</p>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                r.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                r.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
+                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+              }`}>
+                {r.status_display || r.status}
+              </span>
+            </div>
+
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{r.service_type_display || r.service_type}</p>
+            <p className="text-[11px] text-slate-500 line-clamp-2">{r.details}</p>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div>Chi phí: <strong className="text-purple-600 dark:text-purple-400 font-bold">{Number(r.cost).toLocaleString('vi-VN')} ₫</strong></div>
+              <div>ODO: <strong className="font-mono text-slate-800 dark:text-slate-200">{r.odometer_at_service.toLocaleString('vi-VN')} km</strong></div>
+              <div className="col-span-2 truncate">Garage: <strong className="text-slate-800 dark:text-slate-200">{r.garage_name}</strong></div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                onClick={() => handleDelete(r.id)}
+                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Xóa phiếu
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
@@ -147,7 +187,7 @@ export const MaintenancePage: React.FC = () => {
       {/* Modal Thêm Bảo Dưỡng */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Lập Phiếu Bảo Dưỡng & Sửa Chữa">
         <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Mã phiếu bảo dưỡng *"
               value={form.maintenance_code}
@@ -169,7 +209,7 @@ export const MaintenancePage: React.FC = () => {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Hạng mục</label>
               <select
@@ -191,7 +231,7 @@ export const MaintenancePage: React.FC = () => {
               onChange={(e) => setForm({ ...form, odometer_at_service: parseInt(e.target.value) || 0 })}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Garage / Xưởng sửa chữa *"
               value={form.garage_name}

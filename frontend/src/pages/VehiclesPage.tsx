@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Plus, Search, Trash2, Edit3, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Truck, Plus, Search, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { Vehicle } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -75,36 +75,75 @@ export const VehiclesPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Truck className="w-6 h-6 text-blue-600" /> Quản Lý Đội Xe (Vehicles)
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" /> Quản Lý Đội Xe (Vehicles)
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Theo dõi danh sách phương tiện, trọng tải, chỉ số ODO lăn bánh và niên hạn kiểm định.
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+            Theo dõi danh sách phương tiện, trọng tải, chỉ số ODO và đăng kiểm.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
           <Plus className="w-4 h-4" /> Thêm Xe Mới
         </Button>
       </div>
 
       {/* Filter Bar */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-400" />
+      <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+        <Search className="w-4 h-4 text-slate-400 shrink-0" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm theo biển kiểm soát hoặc model xe..."
+          placeholder="Tìm theo biển số hoặc model xe..."
           className="bg-transparent text-xs w-full focus:outline-none text-slate-900 dark:text-slate-100"
         />
       </div>
 
-      {/* Data Table */}
-      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {filtered.map((v) => (
+          <div key={v.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="font-black text-base text-blue-600 dark:text-blue-400">{v.plate_number}</span>
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                  {v.model_name} <span className="text-slate-400 font-normal">({v.brand})</span>
+                </p>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                v.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                v.status === 'ON_TRIP' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
+                'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+              }`}>
+                {v.status_display || v.status}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div>Loại xe: <strong className="text-slate-800 dark:text-slate-200">{v.vehicle_type_display || v.vehicle_type}</strong></div>
+              <div>Tải trọng: <strong className="text-slate-800 dark:text-slate-200">{v.payload_capacity} tấn</strong></div>
+              <div>ODO: <strong className="font-mono text-slate-800 dark:text-slate-200">{v.odometer.toLocaleString('vi-VN')} km</strong></div>
+              <div>Đăng kiểm: <strong className="text-slate-800 dark:text-slate-200">{v.registration_expiry || 'Còn hạn'}</strong></div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button
+                onClick={() => handleDelete(v.id)}
+                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Xóa xe
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Data Table */}
+      <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
@@ -175,7 +214,7 @@ export const VehiclesPage: React.FC = () => {
             placeholder="VD: Hino 500 Series FL"
             required
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Loại xe</label>
               <select
@@ -199,7 +238,7 @@ export const VehiclesPage: React.FC = () => {
               onChange={(e) => setForm({ ...form, payload_capacity: parseFloat(e.target.value) || 0 })}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Chỉ số ODO (km)"
               type="number"
