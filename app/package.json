@@ -1,0 +1,15 @@
+{
+  "name": "fleet-management-system",
+  "version": "1.0.0",
+  "description": "He thong Quan ly Doi xe / Fleet Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "prom-client": "^15.1.2",
+    "winston": "^3.13.0"
+  }
+}
