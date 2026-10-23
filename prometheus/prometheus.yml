@@ -10,7 +10,7 @@ scrape_configs:
   - job_name: 'fleet-app'
     metrics_path: '/metrics'
     static_configs:
-      - targets: ['fleet-app:3000']
+      - targets: ['fleet-backend:8000']
 
   - job_name: 'cadvisor'
     static_configs:

@@ -1,0 +1,227 @@
+import React, { useState, useEffect } from 'react';
+import { Wrench, Plus, Search, Trash2, ShieldCheck, DollarSign } from 'lucide-react';
+import api from '../services/api';
+import { MaintenanceRecord, Vehicle } from '../types';
+import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { useToast } from '../components/ui/Toast';
+
+export const MaintenancePage: React.FC = () => {
+  const [records, setRecords] = useState<MaintenanceRecord[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form, setForm] = useState({
+    maintenance_code: '',
+    vehicle: 0,
+    service_type: 'PERIODIC',
+    odometer_at_service: 50000,
+    service_date: new Date().toISOString().slice(0, 10),
+    garage_name: '',
+    cost: 5000000,
+    details: '',
+    technician_name: '',
+    status: 'COMPLETED',
+  });
+  const { success, error } = useToast();
+
+  const fetchData = async () => {
+    try {
+      const [mRes, vRes] = await Promise.all([
+        api.get('/maintenance/'),
+        api.get('/vehicles/'),
+      ]);
+      setRecords(mRes.data.results || mRes.data || []);
+      setVehicles(vRes.data.results || vRes.data || []);
+      if (vRes.data.length > 0) setForm(prev => ({ ...prev, vehicle: vRes.data[0].id }));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/maintenance/', form);
+      success('Tạo phiếu bảo dưỡng thành công!');
+      setIsModalOpen(false);
+      fetchData();
+    } catch (err: any) {
+      error('Lỗi tạo phiếu bảo dưỡng', 'Vui lòng kiểm tra lại');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Bạn có chắc muốn xóa phiếu bảo dưỡng này?')) return;
+    try {
+      await api.delete(`/maintenance/${id}/`);
+      success('Đã xóa phiếu bảo dưỡng');
+      fetchData();
+    } catch (e) {
+      error('Lỗi xóa phiếu bảo dưỡng');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Wrench className="w-6 h-6 text-purple-600" /> Bảo Dưỡng & Sửa Chữa (Maintenance)
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Theo dõi lịch sử bảo trì định kỳ theo ODO, thay thế phụ tùng, kiểm định an toàn và chi phí garage.
+          </p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Tạo Phiếu Bảo Dưỡng
+        </Button>
+      </div>
+
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th className="py-3 px-4">Mã Phiếu</th>
+                <th className="py-3 px-4">Phương Tiện</th>
+                <th className="py-3 px-4">Hạng Mục</th>
+                <th className="py-3 px-4">ODO Bảo Dưỡng</th>
+                <th className="py-3 px-4">Xưởng Thực Hiện</th>
+                <th className="py-3 px-4">Chi Phí (VNĐ)</th>
+                <th className="py-3 px-4">Trạng Thái</th>
+                <th className="py-3 px-4 text-right">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {records.map((r) => (
+                <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                  <td className="py-3.5 px-4 font-black text-slate-900 dark:text-slate-100">{r.maintenance_code}</td>
+                  <td className="py-3.5 px-4">
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{r.vehicle_plate}</span>
+                    <span className="text-[10px] text-slate-400 block">{r.vehicle_model}</span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{r.service_type_display || r.service_type}</span>
+                    <span className="text-[10px] text-slate-500 block max-w-xs truncate">{r.details}</span>
+                  </td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-700 dark:text-slate-300">
+                    {r.odometer_at_service.toLocaleString('vi-VN')} km
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
+                    {r.garage_name}
+                    {r.technician_name && <span className="text-[10px] text-slate-400 block">{r.technician_name}</span>}
+                  </td>
+                  <td className="py-3.5 px-4 font-black text-purple-600 dark:text-purple-400">
+                    {Number(r.cost).toLocaleString('vi-VN')} ₫
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                      r.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                      r.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
+                      'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                    }`}>
+                      {r.status_display || r.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                      title="Xóa phiếu"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Thêm Bảo Dưỡng */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Lập Phiếu Bảo Dưỡng & Sửa Chữa">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Mã phiếu bảo dưỡng *"
+              value={form.maintenance_code}
+              onChange={(e) => setForm({ ...form, maintenance_code: e.target.value })}
+              placeholder="VD: MAINT-2026-99"
+              required
+            />
+            <div>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Phương tiện *</label>
+              <select
+                value={form.vehicle}
+                onChange={(e) => setForm({ ...form, vehicle: parseInt(e.target.value) })}
+                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                required
+              >
+                {vehicles.map(v => (
+                  <option key={v.id} value={v.id}>{v.plate_number} - {v.model_name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Hạng mục</label>
+              <select
+                value={form.service_type}
+                onChange={(e) => setForm({ ...form, service_type: e.target.value })}
+                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+              >
+                <option value="PERIODIC">Bảo dưỡng định kỳ theo ODO</option>
+                <option value="REPAIR">Sửa chữa hỏng hóc</option>
+                <option value="TIRE">Thay thế lốp xe</option>
+                <option value="OIL_FILTER">Thay dầu nhớt & lọc gió</option>
+                <option value="INSPECTION">Kiểm định an toàn kỹ thuật</option>
+              </select>
+            </div>
+            <Input
+              label="ODO thời điểm bảo dưỡng (km)"
+              type="number"
+              value={form.odometer_at_service}
+              onChange={(e) => setForm({ ...form, odometer_at_service: parseInt(e.target.value) || 0 })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Garage / Xưởng sửa chữa *"
+              value={form.garage_name}
+              onChange={(e) => setForm({ ...form, garage_name: e.target.value })}
+              placeholder="VD: Hino Auto Care Long Biên"
+              required
+            />
+            <Input
+              label="Chi phí (VNĐ)"
+              type="number"
+              value={form.cost}
+              onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Nội dung chi tiết thực hiện *</label>
+            <textarea
+              value={form.details}
+              onChange={(e) => setForm({ ...form, details: e.target.value })}
+              placeholder="Ghi rõ các phụ tùng thay thế và dịch vụ thực hiện..."
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-20"
+              required
+            />
+          </div>
+          <div className="pt-2 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+            <Button type="submit">Lưu Phiếu Bảo Dưỡng</Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+};

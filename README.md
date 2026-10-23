@@ -1,99 +1,105 @@
-# Hệ Thống Quản Lý Đội Xe (Fleet Management System)
+# FleetManage Pro – Hệ Thống Quản Lý Đội Xe Toàn Diện
+
 > **Môn học:** Triển khai và Quản trị Hệ thống Phần mềm (TKQT HTPM)  
-> **Đề tài 30:** Hệ thống Quản lý Đội xe / Fleet
+> **Đề tài 30:** Hệ thống Quản lý Đội xe / Fleet Management System  
+> Giao diện Tiếng Việt chuẩn hóa theo phong cách SaaS Dashboard cao cấp (Linear, Vercel, Notion aesthetic).
 
 ---
 
-## 📌 1. Giới thiệu Đề tài
-Hệ thống Quản lý Đội xe là giải pháp phần mềm toàn diện hỗ trợ doanh nghiệp vận tải quản lý và tối ưu hóa các hoạt động đội xe:
-- **Quản lý Phương tiện:** Theo dõi thông tin biển số, chủng loại xe, tải trọng, quãng đường lăn bánh (ODO) và tình trạng hoạt động (sẵn sàng, đang chạy chuyến, bảo dưỡng).
-- **Quản lý Tài xế:** Lưu trữ hồ sơ tài xế, giấy phép lái xe, số điện thoại, số năm kinh nghiệm và trạng thái phân công.
-- **Lịch trình / Vận hành:** Lập và theo dõi các chuyến xe từ điểm đi đến điểm đến, thời gian khởi hành, thời gian dự kiến đến, tải trọng chở hàng và tiến độ di chuyển.
-- **Bảo trì / Sửa chữa:** Ghi nhận lịch sử bảo dưỡng xe định kỳ, chi phí sửa chữa, đơn vị thực hiện dịch vụ nhằm đảm bảo an toàn kỹ thuật.
+## 1. Công Nghệ Sử Dụng
 
----
+### Frontend
+- **React 18 + TypeScript + Vite 6**
+- **Tailwind CSS v3**: Thiết kế giao diện hiện đại, tinh tế với Dark Mode / Light Mode
+- **Lucide Icons**: Bộ icon giao diện trực quan và đồng bộ
+- **Recharts**: Biểu đồ phân bổ trạng thái xe và biến động chi phí nhiên liệu / bảo dưỡng theo tháng
+- **React Router v6**: Điều hướng SPA mượt mà, phân quyền route (Role Guards)
+- **Axios**: Quản lý API client với cơ chế tự động đính kèm JWT Bearer và refresh token an toàn
+- **Avatar Tự động**: Tích hợp avatar cho toàn bộ tài khoản và tài xế bằng DiceBear API hoặc ảnh hồ sơ
 
-## 🏗️ 2. Kiến trúc Hệ thống & Ngăn xếp Công nghệ (Tech Stack)
-Hệ thống được thiết kế theo mô hình Microservices/Multi-container triển khai đồng bộ bằng **Docker Compose**:
-- **Application Backend & Frontend:** Node.js + Express.js + HTML5 / CSS3 / JavaScript hiện đại (giao diện dashboard trực quan).
-- **Database:** PostgreSQL 16 Alpine + công cụ quản trị GUI **pgAdmin 4**.
-- **Reverse Proxy & Bảo mật:** Nginx (hỗ trợ SSL/TLS tự ký HTTPS, cấu hình các HTTP Security Headers).
+### Backend
+- **Python 3.12 + Django 5.2 / DRF (Django REST Framework)**
+- **SimpleJWT**: Xác thực JWT đa tầng với cơ chế cấp phát Access Token & Refresh Token
+- **drf-spectacular**: Tự động sinh tài liệu chuẩn **OpenAPI 3.0 / Swagger UI** tại `/api/docs/`
+- **django-prometheus**: Cung cấp metrics chuẩn Prometheus tại `/metrics`
+- **Cơ sở dữ liệu**: **PostgreSQL 16 Alpine** + **pgAdmin 4**
+
+### Hạ Tầng & Quản Trị Hệ Thống (DevOps / TKQT HTPM)
+- **Nginx Reverse Proxy**: Tự động chuyển hướng HTTPS (SSL/TLS tự ký), bảo mật với Security Headers (HSTS, nosniff, SAMEORIGIN...) và che giấu version `server_tokens off`.
 - **Hệ thống Giám sát (Monitoring):**
-  - **Prometheus**: Thu thập số liệu hiệu năng định kỳ (scrape metrics).
+  - **Prometheus**: Thu thập số liệu hiệu năng định kỳ từ App, PostgreSQL, Nginx và cAdvisor.
   - **cAdvisor**: Giám sát tài nguyên phần cứng container (CPU, RAM, Network I/O).
   - **PostgreSQL Exporter**: Thu thập chỉ số database (active connections, locks, transactions).
   - **Nginx Exporter**: Giám sát số lượng kết nối và request của reverse proxy.
-  - **Grafana**: Hiển thị bảng điều khiển (Dashboard) trực quan các chỉ số hệ thống.
-- **Hệ thống Quản lý Log tập trung (Centralized Logging):**
+  - **Grafana**: Hiển thị bảng điều khiển (Dashboard) trực quan các chỉ số hệ thống tại cổng `3001`.
+- **Hệ thống Log Tập Trung (Centralized Logging):**
   - **Promtail**: Thu thập log từ container Docker và access/error log định dạng JSON của Nginx.
-  - **Loki**: Lưu trữ và đánh chỉ mục (index) log hiệu năng cao.
+  - **Loki**: Lưu trữ và đánh chỉ mục (index) log hiệu năng cao tại cổng `3100`.
   - **LogQL**: Truy vấn, lọc log trực tiếp trên Grafana Explore.
 
 ---
 
-## 🛡️ 3. Các Biện Pháp Hardening & Bảo Mật Áp Dụng
-1. **Chạy ứng dụng với Non-Root User:**
-   - Dockerfile của Web App tạo và sử dụng người dùng phi đặc quyền `USER node`, ngăn chặn nguy cơ leo thang đặc quyền container breakout.
-2. **Cách ly Mạng (Network Isolation):**
-   - Phân chia thành 3 mạng Docker bridge riêng biệt: `frontend-network`, `backend-network`, `monitoring-network`.
-   - Cơ sở dữ liệu PostgreSQL chỉ nằm trong mạng nội bộ, không expose port ra bên ngoài host, ngăn ngừa tấn công quét cổng DB trực tiếp.
-3. **Nginx Security Headers & Ẩn thông tin phiên bản:**
-   - Cấu hình `server_tokens off;` để che giấu version Nginx.
-   - Bổ sung các header bảo mật: `X-Frame-Options SAMEORIGIN`, `X-Content-Type-Options nosniff`, `X-XSS-Protection`, `Strict-Transport-Security (HSTS)`, `Referrer-Policy`.
-4. **Mật khẩu an toàn & Phân quyền cơ sở dữ liệu:**
-   - Toàn bộ service sử dụng chuỗi mật khẩu phức tạp (chữ hoa, thường, số, ký tự đặc biệt).
+## 2. Danh Sách Tài Khoản Demo Đã Tạo Sẵn
+
+Hệ thống đã được nạp sẵn cơ sở dữ liệu mẫu phong phú (Hồ sơ xe, tài xế, lịch trình vận chuyển, phiếu bảo dưỡng, hóa đơn xăng dầu BOT, báo cáo sự cố và thông báo).
+
+| Vai trò | Tên đăng nhập | Mật khẩu | Chức năng chính |
+|---|---|---|---|
+| **Quản trị viên (Admin)** | `admin` | `Admin@123` | Toàn quyền quản trị hệ thống, người dùng, cấu hình và giám sát |
+| **Điều hành Đội xe (Dispatcher)** | `dieuhanh` | `Dieuhanh@123` | Điều phối xe, phân công tài xế, lên lịch trình và lộ trình giao nhận |
+| **Tài xế Vận tải (Driver)** | `taixe` | `Taixe@123` | Xem lệnh điều xe, cập nhật trạng thái chuyến, báo cáo chi phí xăng dầu |
+| **Kỹ thuật / Bảo dưỡng (Mechanic)** | `kythuat` | `Kythuat@123` | Lập phiếu bảo dưỡng định kỳ, sửa chữa phụ tùng, kiểm định an toàn |
+| **Kế toán Đội xe (Accountant)** | `ketoan` | `Ketoan@123` | Quản lý hóa đơn xăng dầu, phí cầu đường BOT, chi phí bảo hiểm sự cố |
+
+> **Mẹo nhanh:** Trên thanh Header và tại màn hình Đăng nhập có sẵn các nút bấm **"Chọn nhanh tài khoản Demo"** giúp chuyển đổi tức thì giữa các vai trò để kiểm thử tất cả các luồng nghiệp vụ.
 
 ---
 
-## 🚀 4. Hướng dẫn Khởi chạy Hệ thống
+## 3. Bảng Ma Trận Nghiệm Thu Tính Năng Đề Tài
 
-### Bước 1: Yêu cầu môi trường
-- Hệ điều hành Linux / macOS / Windows có cài đặt **Docker** và **Docker Compose**.
+| Mã YC | Tên chức năng | File triển khai | API liên quan | Trạng thái |
+|:---:|---|---|---|:---:|
+| **AUTH-01** | Đăng nhập JWT & Refresh token | `apps/accounts/` | `POST /api/v1/auth/login/` | **PASS** |
+| **AUTH-02** | Phân quyền đa vai trò RBAC | `apps/accounts/models.py` | Toàn bộ API endpoint | **PASS** |
+| **VEHI-01** | Quản lý Đội xe / Phương tiện (CRUD) | `apps/vehicles/` | `GET/POST/DELETE /api/v1/vehicles/` | **PASS** |
+| **VEHI-02** | Giám sát ODO, Hạn Đăng kiểm & Bảo hiểm | `src/pages/VehiclesPage.tsx` | `/api/v1/vehicles/` | **PASS** |
+| **DRIV-01** | Quản lý Hồ sơ Tài xế & Hạng GPLX (B2, C, FC) | `apps/drivers/` | `GET/POST/DELETE /api/v1/drivers/` | **PASS** |
+| **DRIV-02** | Đánh giá sao & Avatar tự động | `src/pages/DriversPage.tsx` | `/api/v1/drivers/` | **PASS** |
+| **SCHD-01** | Điều phối & Lập lịch trình chuyến đi | `apps/schedules/` | `GET/POST/DELETE /api/v1/schedules/` | **PASS** |
+| **SCHD-02** | Lộ trình xuất phát &rarr; điểm đến, cự ly km | `src/pages/SchedulesPage.tsx` | `/api/v1/schedules/` | **PASS** |
+| **MAIN-01** | Quản lý Bảo dưỡng định kỳ & Sửa chữa | `apps/maintenance/` | `GET/POST/DELETE /api/v1/maintenance/` | **PASS** |
+| **MAIN-02** | Theo dõi chi phí garage & thợ phụ trách | `src/pages/MaintenancePage.tsx` | `/api/v1/maintenance/` | **PASS** |
+| **EXPN-01** | Quản lý Nhiên liệu xăng dầu & Hóa đơn BOT | `apps/fuel_expenses/` | `GET/POST/DELETE /api/v1/expenses/` | **PASS** |
+| **INCI-01** | Báo cáo Sự cố, Tai nạn & Hồ sơ Bảo hiểm | `apps/incidents/` | `GET/POST/DELETE /api/v1/incidents/` | **PASS** |
+| **NOTI-01** | Trung tâm Thông báo & Cảnh báo hạn | `apps/notifications/` | `GET/POST /api/v1/notifications/` | **PASS** |
+| **DASH-01** | Dashboard & Biểu đồ thống kê Recharts | `src/pages/DashboardPage.tsx` | `GET /api/v1/core/dashboard-stats/` | **PASS** |
+| **SRCH-01** | Tìm kiếm toàn cục tức thì (Ctrl + K) | `src/components/layout/GlobalSearchModal.tsx` | `GET /api/v1/core/global-search/` | **PASS** |
+| **DOCS-01** | Tài liệu chuẩn OpenAPI 3.0 / Swagger UI | `drf-spectacular` | `GET /api/docs/` | **PASS** |
 
-### Bước 2: Clone source code
+---
+
+## 4. Hướng Dẫn Khởi Chạy Bằng Docker Compose
+
 ```bash
 git clone https://github.com/azmedia2006/quan-ly-doi-xe-.git
 cd quan-ly-doi-xe-
-```
-
-### Bước 3: Khởi động hệ thống bằng Docker Compose
-```bash
 docker compose up -d --build
 ```
 
-Kiểm tra trạng thái các container đang hoạt động:
+Kiểm tra trạng thái các container:
 ```bash
 docker compose ps
 ```
 
 ---
 
-## 🌐 5. Danh Mục Cổng Truy Cập Dịch Vụ
+## 5. Danh Mục Cổng Truy Cập Dịch Vụ Trên VPS
 
-| Dịch vụ | Giao thức / Cổng | URL Truy cập | Tài khoản mặc định |
-| :--- | :--- | :--- | :--- |
-| **Ứng dụng Quản lý Đội xe** | HTTPS (Cổng 443) / HTTP (80) | `https://localhost` hoặc `http://localhost` | Khách / Quản trị |
-| **pgAdmin 4 (Quản trị DB)** | Reverse Proxy qua Nginx | `https://localhost/pgadmin/` | `admin@fleet.com` / `FleetAdmin2026!Secure` |
-| **Grafana Dashboard** | HTTP (Cổng 3001) | `http://localhost:3001` | `admin` / `admin` |
-| **Prometheus Web UI** | HTTP (Cổng 9090) | `http://localhost:9090` | Không yêu cầu |
-| **Loki Log Server** | HTTP (Cổng 3100) | `http://localhost:3100` | Service endpoint |
-
----
-
-## 🔍 6. Hướng dẫn Truy Vấn LogQL Mẫu Trên Grafana (Loki)
-Vào Grafana `http://localhost:3001` -> chọn **Explore** -> chọn Data Source **Loki**:
-
-1. **Xem toàn bộ log của Web Application:**
-   ```logql
-   {container="fleet-app"}
-   ```
-
-2. **Lọc log các yêu cầu HTTP có mã trạng thái lỗi (status code >= 400):**
-   ```logql
-   {container="fleet-app"} |= "HTTP Request completed" | json | status >= 400
-   ```
-
-3. **Truy vấn log truy cập Nginx Reverse Proxy:**
-   ```logql
-   {job="nginx"} | json
-   ```
+| Dịch vụ | Địa chỉ URL | Ghi chú & Tài khoản |
+| :--- | :--- | :--- |
+| **Website Quản Lý Đội Xe (SPA)** | `https://180.93.114.74` hoặc `http://180.93.114.74` | Đăng nhập tài khoản mẫu: `admin` / `Admin@123` |
+| **Tài liệu Swagger API** | `https://180.93.114.74/api/docs/` | Xem và thử nghiệm trực tiếp toàn bộ REST API |
+| **pgAdmin 4 (Quản trị DB)** | `https://180.93.114.74/pgadmin/` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
+| **Grafana Monitoring Dashboard** | `http://180.93.114.74:3001` | User: `admin` / Pass: `admin` |
+| **Prometheus Web UI** | `http://180.93.114.74:9090` | Thu thập metrics hệ thống |
+| **Loki Centralized Logging** | `http://180.93.114.74:3100` | Cổng lưu trữ và truy vấn log |
