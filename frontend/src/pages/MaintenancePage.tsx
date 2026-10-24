@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, Trash2 } from 'lucide-react';
+import { Wrench, Plus, Trash2, Calendar, Gauge, Building2 } from 'lucide-react';
 import api from '../services/api';
 import { MaintenanceRecord, Vehicle } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export const MaintenancePage: React.FC = () => {
+  const { user } = useAuth();
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { success, error } = useToast();
+
+  const canEdit = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' || user?.role === 'MECHANIC' || user?.role === 'ACCOUNTANT';
+
+  // Function sinh mã phiếu ngẫu nhiên để không bao giờ bị trùng
+  const generateMaintenanceCode = () => {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `MAINT-${new Date().getFullYear()}-${randomNum}`;
+  };
+
   const [form, setForm] = useState({
     maintenance_code: '',
     vehicle: 0,
@@ -20,10 +32,9 @@ export const MaintenancePage: React.FC = () => {
     garage_name: '',
     cost: 5000000,
     details: '',
-    technician_name: '',
+    technician_name: user?.full_name || 'KTV Xưởng Dịch Vụ',
     status: 'COMPLETED',
   });
-  const { success, error } = useToast();
 
   const fetchData = async () => {
     try {
@@ -32,8 +43,16 @@ export const MaintenancePage: React.FC = () => {
         api.get('/vehicles/'),
       ]);
       setRecords(mRes.data.results || mRes.data || []);
-      setVehicles(vRes.data.results || vRes.data || []);
-      if (vRes.data.length > 0) setForm(prev => ({ ...prev, vehicle: vRes.data[0].id }));
+      const vList: Vehicle[] = vRes.data.results || vRes.data || [];
+      setVehicles(vList);
+      if (vList.length > 0) {
+        setForm(prev => ({
+          ...prev,
+          vehicle: prev.vehicle || vList[0].id,
+          odometer_at_service: vList[0].odometer || 50000,
+          maintenance_code: prev.maintenance_code || generateMaintenanceCode(),
+        }));
+      }
     } catch (e) {
       console.error(e);
     }
@@ -43,15 +62,44 @@ export const MaintenancePage: React.FC = () => {
     fetchData();
   }, []);
 
+  const handleOpenModal = () => {
+    const defaultVehicle = vehicles[0];
+    setForm({
+      maintenance_code: generateMaintenanceCode(),
+      vehicle: defaultVehicle ? defaultVehicle.id : 0,
+      service_type: 'PERIODIC',
+      odometer_at_service: defaultVehicle ? defaultVehicle.odometer : 50000,
+      service_date: new Date().toISOString().slice(0, 10),
+      garage_name: '',
+      cost: 3500000,
+      details: '',
+      technician_name: user?.full_name || 'Kỹ thuật viên xưởng',
+      status: 'COMPLETED',
+    });
+    setIsModalOpen(true);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.vehicle) {
+      error('Thiếu thông tin', 'Vui lòng chọn phương tiện cần bảo dưỡng');
+      return;
+    }
+
     try {
       await api.post('/maintenance/', form);
       success('Tạo phiếu bảo dưỡng thành công!');
       setIsModalOpen(false);
       fetchData();
     } catch (err: any) {
-      error('Lỗi tạo phiếu bảo dưỡng', 'Vui lòng kiểm tra lại');
+      const errorMsg =
+        err.response?.data?.maintenance_code?.[0] ||
+        err.response?.data?.vehicle?.[0] ||
+        err.response?.data?.details?.[0] ||
+        err.response?.data?.non_field_errors?.[0] ||
+        err.response?.data?.detail ||
+        'Vui lòng kiểm tra lại thông tin nhập';
+      error('Lỗi tạo phiếu bảo dưỡng', errorMsg);
     }
   };
 
@@ -77,9 +125,14 @@ export const MaintenancePage: React.FC = () => {
             Theo dõi bảo trì theo ODO, thay thế phụ tùng, xưởng thực hiện và chi phí.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
-          <Plus className="w-4 h-4" /> Tạo Phiếu Bảo Dưỡng
-        </Button>
+        {canEdit && (
+          <Button
+            onClick={handleOpenModal}
+            className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" /> Tạo Phiếu Bảo Dưỡng
+          </Button>
+        )}
       </div>
 
       {/* Mobile Card View */}
@@ -105,18 +158,22 @@ export const MaintenancePage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div>Chi phí: <strong className="text-purple-600 dark:text-purple-400 font-bold">{Number(r.cost).toLocaleString('vi-VN')} ₫</strong></div>
-              <div>ODO: <strong className="font-mono text-slate-800 dark:text-slate-200">{r.odometer_at_service.toLocaleString('vi-VN')} km</strong></div>
+              <div>ODO: <strong className="font-mono text-slate-800 dark:text-slate-200">{Number(r.odometer_at_service || 0).toLocaleString('vi-VN')} km</strong></div>
+              <div>Ngày: <strong className="text-slate-800 dark:text-slate-200">{new Date(r.service_date).toLocaleDateString('vi-VN')}</strong></div>
+              <div>KTV: <strong className="text-slate-800 dark:text-slate-200">{r.technician_name || '—'}</strong></div>
               <div className="col-span-2 truncate">Garage: <strong className="text-slate-800 dark:text-slate-200">{r.garage_name}</strong></div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 w-full">
-              <button
-                onClick={() => handleDelete(r.id)}
-                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Xóa phiếu
-              </button>
-            </div>
+            {canEdit && (
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 w-full">
+                <button
+                  onClick={() => handleDelete(r.id)}
+                  className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Xóa phiếu
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -130,31 +187,32 @@ export const MaintenancePage: React.FC = () => {
                 <th className="py-3 px-4">Mã Phiếu</th>
                 <th className="py-3 px-4">Phương Tiện</th>
                 <th className="py-3 px-4">Hạng Mục</th>
-                <th className="py-3 px-4">ODO Bảo Dưỡng</th>
-                <th className="py-3 px-4">Xưởng Thực Hiện</th>
+                <th className="py-3 px-4">ODO & Ngày</th>
+                <th className="py-3 px-4">Garage & Kỹ Thuật Viên</th>
                 <th className="py-3 px-4">Chi Phí (VNĐ)</th>
                 <th className="py-3 px-4">Trạng Thái</th>
-                <th className="py-3 px-4 text-right">Thao Tác</th>
+                {canEdit && <th className="py-3 px-4 text-right">Thao Tác</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {records.map((r) => (
                 <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                  <td className="py-3.5 px-4 font-black text-slate-900 dark:text-slate-100">{r.maintenance_code}</td>
+                  <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">{r.maintenance_code}</td>
                   <td className="py-3.5 px-4">
                     <span className="font-bold text-blue-600 dark:text-blue-400">{r.vehicle_plate}</span>
                     <span className="text-[10px] text-slate-400 block">{r.vehicle_model}</span>
                   </td>
                   <td className="py-3.5 px-4">
                     <span className="font-semibold text-slate-800 dark:text-slate-200">{r.service_type_display || r.service_type}</span>
-                    <span className="text-[10px] text-slate-500 block max-w-xs truncate">{r.details}</span>
+                    <span className="text-[11px] text-slate-500 block truncate max-w-xs">{r.details}</span>
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-700 dark:text-slate-300">
-                    {r.odometer_at_service.toLocaleString('vi-VN')} km
+                  <td className="py-3.5 px-4">
+                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{Number(r.odometer_at_service || 0).toLocaleString('vi-VN')} km</span>
+                    <span className="text-[10px] text-slate-400 block">{new Date(r.service_date).toLocaleDateString('vi-VN')}</span>
                   </td>
                   <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
-                    {r.garage_name}
-                    {r.technician_name && <span className="text-[10px] text-slate-400 block">{r.technician_name}</span>}
+                    <span className="font-medium text-slate-800 dark:text-slate-200 block truncate max-w-xs">{r.garage_name}</span>
+                    <span className="text-[10px] text-slate-400 block">KTV: {r.technician_name || '—'}</span>
                   </td>
                   <td className="py-3.5 px-4 font-black text-purple-600 dark:text-purple-400">
                     {Number(r.cost).toLocaleString('vi-VN')} ₫
@@ -168,15 +226,17 @@ export const MaintenancePage: React.FC = () => {
                       {r.status_display || r.status}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => handleDelete(r.id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                      title="Xóa phiếu"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+                  {canEdit && (
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => handleDelete(r.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        title="Xóa phiếu"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -199,63 +259,95 @@ export const MaintenancePage: React.FC = () => {
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Phương tiện *</label>
               <select
                 value={form.vehicle}
-                onChange={(e) => setForm({ ...form, vehicle: parseInt(e.target.value) })}
-                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                onChange={(e) => {
+                  const selectedId = parseInt(e.target.value);
+                  const selectedVehicle = vehicles.find(v => v.id === selectedId);
+                  setForm(prev => ({
+                    ...prev,
+                    vehicle: selectedId,
+                    odometer_at_service: selectedVehicle ? selectedVehicle.odometer : prev.odometer_at_service,
+                  }));
+                }}
+                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
                 required
               >
                 {vehicles.map(v => (
-                  <option key={v.id} value={v.id}>{v.plate_number} - {v.model_name}</option>
+                  <option key={v.id} value={v.id}>
+                    {v.plate_number} - {v.model_name} (ODO: {v.odometer.toLocaleString('vi-VN')} km)
+                  </option>
                 ))}
               </select>
             </div>
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Hạng mục</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Hạng mục dịch vụ *</label>
               <select
                 value={form.service_type}
                 onChange={(e) => setForm({ ...form, service_type: e.target.value })}
-                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
               >
                 <option value="PERIODIC">Bảo dưỡng định kỳ theo ODO</option>
-                <option value="REPAIR">Sửa chữa hỏng hóc</option>
-                <option value="TIRE">Thay thế lốp xe</option>
-                <option value="OIL_FILTER">Thay dầu nhớt & lọc gió</option>
-                <option value="INSPECTION">Kiểm định an toàn kỹ thuật</option>
+                <option value="REPAIR">Sửa chữa hỏng hóc kỹ thuật</option>
+                <option value="TIRE">Thay thế lốp xe & cân mâm</option>
+                <option value="OIL_FILTER">Thay dầu nhớt động cơ & lọc gió</option>
+                <option value="INSPECTION">Kiểm định an toàn kỹ thuật (Đăng kiểm)</option>
               </select>
             </div>
             <Input
-              label="ODO thời điểm bảo dưỡng (km)"
+              label="Số ODO tại thời điểm bảo dưỡng (km) *"
               type="number"
               value={form.odometer_at_service}
               onChange={(e) => setForm({ ...form, odometer_at_service: parseInt(e.target.value) || 0 })}
+              required
             />
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              label="Garage / Xưởng sửa chữa *"
+              label="Garage / Xưởng sửa chữa thực hiện *"
               value={form.garage_name}
               onChange={(e) => setForm({ ...form, garage_name: e.target.value })}
-              placeholder="VD: Hino Auto Care Long Biên"
+              placeholder="VD: Xưởng Dịch Vụ Isuzu Long Biên"
               required
             />
             <Input
-              label="Chi phí (VNĐ)"
+              label="Tổng chi phí thực hiện (VNĐ) *"
               type="number"
               value={form.cost}
               onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Nội dung chi tiết thực hiện *</label>
-            <textarea
-              value={form.details}
-              onChange={(e) => setForm({ ...form, details: e.target.value })}
-              placeholder="Ghi rõ các phụ tùng thay thế và dịch vụ thực hiện..."
-              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-20"
               required
             />
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Ngày thực hiện dịch vụ *"
+              type="date"
+              value={form.service_date}
+              onChange={(e) => setForm({ ...form, service_date: e.target.value })}
+              required
+            />
+            <Input
+              label="Kỹ thuật viên / Thợ phụ trách"
+              value={form.technician_name}
+              onChange={(e) => setForm({ ...form, technician_name: e.target.value })}
+              placeholder="VD: KTV Nguyễn Văn Cường"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Nội dung chi tiết thực hiện & Phụ tùng thay thế *</label>
+            <textarea
+              value={form.details}
+              onChange={(e) => setForm({ ...form, details: e.target.value })}
+              placeholder="Ghi rõ chi tiết công việc thực hiện, mã phụ tùng thay thế và hiện trạng sau sửa chữa..."
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-20 outline-none focus:ring-2 focus:ring-purple-500/30"
+              required
+            />
+          </div>
+
           <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
             <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setIsModalOpen(false)}>Hủy</Button>
             <Button type="submit" className="w-full sm:w-auto">Lưu Phiếu Bảo Dưỡng</Button>
