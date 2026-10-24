@@ -112,7 +112,7 @@ export const IncidentsPage: React.FC = () => {
               <div className="col-span-2">Tài xế: <strong className="text-slate-800 dark:text-slate-200">{inc.driver_name || '—'}</strong></div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 w-full">
               <button
                 onClick={() => handleDelete(inc.id)}
                 className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
@@ -254,9 +254,9 @@ export const IncidentsPage: React.FC = () => {
               required
             />
           </div>
-          <div className="pt-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-            <Button type="submit">Gửi Báo Cáo Sự Cố</Button>
+          <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setIsModalOpen(false)}>Hủy</Button>
+            <Button type="submit" className="w-full sm:w-auto">Gửi Báo Cáo Sự Cố</Button>
           </div>
         </form>
       </Modal>
