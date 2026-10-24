@@ -269,7 +269,7 @@ export const ReportsPage: React.FC = () => {
       <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-[10px] font-semibold text-blue-300">
-            Hạ Tầng Giám Sát Chuyên Sâu (DevOps TKQT HTPM)
+            Hạ Tầng Giám Sát Chuyên Sâu (DevOps CNTT K23L)
           </span>
           <h3 className="text-base sm:text-lg font-bold mt-1.5">
             Xem Báo Cáo Hiệu Năng Thời Gian Thực Trên Grafana

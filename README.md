@@ -7,7 +7,7 @@
 <p align="center">
   <b>Tác giả / Sinh viên thực hiện:</b> <a href="https://github.com/azmedia2006">AZMEDIA (doanminhquanhack@gmail.com)</a><br/>
   <b>Lớp chuyên ngành:</b> <b>CNTT K23</b><br/>
-  <b>Học phần:</b> Triển khai và Quản trị Hệ thống Phần mềm (TKQT HTPM)<br/>
+  <b>Học phần:</b> Triển khai và Quản trị Hệ thống Phần mềm (CNTT K23L)<br/>
   <b>Đề tài 30:</b> Hệ thống Quản lý Đội xe / Fleet Management System
 </p>
 
@@ -49,7 +49,7 @@
 
 - **Sinh viên / Tác giả:** AZMEDIA (Nguyễn / Đoàn Minh Quân)
 - **Lớp chuyên ngành:** **CNTT K23**
-- **Học phần:** Triển khai và Quản trị Hệ thống Phần mềm (TKQT HTPM K23)
+- **Học phần:** Triển khai và Quản trị Hệ thống Phần mềm (CNTT K23L)
 - **Đề tài số 30:** **Hệ thống Quản lý Đội xe / Fleet Management System**
 - **Mục tiêu đề tài:** Xây dựng và triển khai toàn diện hệ thống quản lý vận tải doanh nghiệp theo chuẩn kiến trúc Microservices hướng container. Tích hợp trọn vẹn quy trình điều phối phương tiện, hồ sơ tài xế, lệnh điều xe, quản lý định mức xăng dầu, chi phí BOT, bảo dưỡng định kỳ cùng hạ tầng giám sát hiệu năng (Prometheus, Grafana), thu thập log tập trung (Loki, Promtail) và các giải pháp an toàn bảo mật (Hardening).
 
@@ -57,7 +57,7 @@
 
 ## 2. Bảng Đối Chiếu Tiêu Chí Đánh Giá Đề Tài (Đạt Điểm Tuyệt Đối)
 
-Theo thang điểm nghiệm thu môn học **TKQT HTPM K23**, đồ án đáp ứng trọn vẹn 100% các tiêu chí:
+Theo thang điểm nghiệm thu môn học **CNTT K23L**, đồ án đáp ứng trọn vẹn 100% các tiêu chí:
 
 | STT | Tiêu chí đánh giá | Yêu cầu chuẩn | Kết quả thực hiện trong đồ án | Điểm |
 |:---:|:---|:---|:---|:---:|

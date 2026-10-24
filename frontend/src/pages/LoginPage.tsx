@@ -89,7 +89,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Footer info */}
         <div className="relative z-10 text-xs text-slate-400 flex items-center justify-between">
-          <span>Triển khai & Quản trị Hệ thống Phần mềm (TKQT HTPM)</span>
+          <span>Triển khai và Quản trị Hệ thống Phần mềm (CNTT K23L)</span>
           <span>Đề 30: Quản lý Đội xe</span>
         </div>
       </div>
