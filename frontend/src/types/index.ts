@@ -99,13 +99,20 @@ export interface Expense {
   vehicle_model?: string;
   driver?: number;
   driver_name?: string;
+  trip?: number;
+  trip_code?: string;
+  trip_route?: string;
   category: 'FUEL' | 'TOLL' | 'REPAIR' | 'FINE' | 'OTHER';
   category_display?: string;
   amount: number;
   expense_date: string;
+  odometer_at_fuel?: number;
   liters?: number;
-  fuel_price_per_liter?: number; // // NEW
+  fuel_price_per_liter?: number;
   invoice_number?: string;
+  receipt_image_url?: string;
+  approval_status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  approval_status_display?: string;
   notes?: string;
 }
 

@@ -1,6 +1,6 @@
-// UPDATE: Cập nhật ExpensesPage quản lý chi phí & xăng dầu, phân quyền RBAC và 4 loại chi phí bắt buộc
+// UPDATE: Bổ sung Quick Stats, Filter Chips, Approval Status, ODO, Trip Link, Receipt, Edit/Delete safety
 import React, { useState, useEffect } from 'react';
-import { Fuel, Plus, Trash2, ReceiptText, ShieldCheck } from 'lucide-react';
+import { Fuel, Plus, Search, Trash2, ReceiptText, ShieldCheck, Pencil, DollarSign, FileCheck2, AlertTriangle, Paperclip, MapPin, Gauge, CheckCircle, Clock, Image } from 'lucide-react';
 import api from '../services/api';
 import { Expense, Vehicle, Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -9,24 +9,30 @@ import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
 import { useAuth } from '../context/AuthContext';
 
+// NEW: Filter type
+type ExpenseFilter = 'ALL' | 'FUEL' | 'TOLL' | 'REPAIR' | 'PENDING' | 'APPROVED';
+
 export const ExpensesPage: React.FC = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState(''); // NEW
+  const [filter, setFilter] = useState<ExpenseFilter>('ALL'); // NEW
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null); // NEW
+  const [receiptModal, setReceiptModal] = useState<string | null>(null); // NEW: Receipt viewer
 
-  // UPDATE: Phân quyền RBAC: Kế toán và Admin có quyền quản lý toàn bộ & xóa chi phí. Driver được ghi nhận báo cáo.
   const canManageAll = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
   const canDelete = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
 
-  // UPDATE: Cập nhật form đầy đủ 4 loại chi phí và đơn giá nhiên liệu
   const [form, setForm] = useState({
     vehicle: 0,
     driver: 0,
     category: 'FUEL',
     amount: 1500000,
     expense_date: new Date().toISOString().slice(0, 10),
+    odometer_at_fuel: 0,
     liters: 65.0,
     fuel_price_per_liter: 23500,
     invoice_number: '',
@@ -53,9 +59,40 @@ export const ExpensesPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  // NEW: Reset form
+  const resetForm = () => {
+    setForm({
+      vehicle: vehicles[0]?.id || 0, driver: drivers[0]?.id || 0,
+      category: 'FUEL', amount: 1500000, expense_date: new Date().toISOString().slice(0, 10),
+      odometer_at_fuel: 0, liters: 65.0, fuel_price_per_liter: 23500, invoice_number: '', notes: '',
+    });
+  };
+
+  const handleOpenCreate = () => {
+    setEditingExpense(null);
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  // NEW: Open edit
+  const handleEdit = (exp: Expense) => {
+    setEditingExpense(exp);
+    setForm({
+      vehicle: exp.vehicle,
+      driver: exp.driver || 0,
+      category: exp.category,
+      amount: Number(exp.amount),
+      expense_date: exp.expense_date,
+      odometer_at_fuel: exp.odometer_at_fuel || 0,
+      liters: Number(exp.liters) || 0,
+      fuel_price_per_liter: Number(exp.fuel_price_per_liter) || 0,
+      invoice_number: exp.invoice_number || '',
+      notes: exp.notes || '',
+    });
+    setIsModalOpen(true);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +103,21 @@ export const ExpensesPage: React.FC = () => {
       fetchData();
     } catch (err: any) {
       error('Lỗi lưu chi phí', 'Vui lòng kiểm tra lại thông tin chi phí');
+    }
+  };
+
+  // NEW: Handle update
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExpense) return;
+    try {
+      await api.put(`/expenses/${editingExpense.id}/`, form);
+      success('Cập nhật chi phí thành công!');
+      setIsModalOpen(false);
+      setEditingExpense(null);
+      fetchData();
+    } catch (err: any) {
+      error('Lỗi cập nhật', 'Vui lòng kiểm tra lại dữ liệu');
     }
   };
 
@@ -96,8 +148,59 @@ export const ExpensesPage: React.FC = () => {
     }
   };
 
+  // NEW: Approval badge
+  const getApprovalBadge = (status: string) => {
+    if (status === 'APPROVED') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" /> Đã duyệt</span>;
+    if (status === 'REJECTED') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">Từ chối</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> Chờ duyệt</span>;
+  };
+
+  // NEW: Stats
+  const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0);
+  const fuelTotal = expenses.filter(e => e.category === 'FUEL').reduce((s, e) => s + Number(e.amount), 0);
+  const tollTotal = expenses.filter(e => e.category === 'TOLL').reduce((s, e) => s + Number(e.amount), 0);
+  const otherTotal = expenses.filter(e => !['FUEL', 'TOLL'].includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
+  const pendingCount = expenses.filter(e => e.approval_status === 'PENDING').length;
+  const approvedCount = expenses.filter(e => e.approval_status === 'APPROVED').length;
+
+  // NEW: Filtered list
+  const filtered = expenses.filter(e => {
+    const q = search.toLowerCase();
+    const matchSearch = !q ||
+      (e.vehicle_plate || '').toLowerCase().includes(q) ||
+      (e.driver_name || '').toLowerCase().includes(q) ||
+      (e.invoice_number || '').toLowerCase().includes(q) ||
+      (e.trip_code || '').toLowerCase().includes(q);
+    if (!matchSearch) return false;
+    if (filter === 'ALL') return true;
+    if (filter === 'FUEL') return e.category === 'FUEL';
+    if (filter === 'TOLL') return e.category === 'TOLL';
+    if (filter === 'REPAIR') return e.category === 'REPAIR' || e.category === 'FINE' || e.category === 'OTHER';
+    if (filter === 'PENDING') return e.approval_status === 'PENDING';
+    if (filter === 'APPROVED') return e.approval_status === 'APPROVED';
+    return true;
+  });
+
+  // NEW: Stats cards & filter chips
+  const statsCards = [
+    { label: 'Tổng chi phí', value: totalExpense, icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40' },
+    { label: 'Xăng / Dầu', value: fuelTotal, icon: Fuel, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { label: 'BOT & Cầu đường', value: tollTotal, icon: MapPin, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { label: 'BD & Khác', value: otherTotal, icon: AlertTriangle, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/40' },
+  ];
+
+  const filterChips: { key: ExpenseFilter; label: string; count: number }[] = [
+    { key: 'ALL', label: 'Tất cả', count: expenses.length },
+    { key: 'FUEL', label: 'Xăng / Dầu', count: expenses.filter(e => e.category === 'FUEL').length },
+    { key: 'TOLL', label: 'Phí BOT', count: expenses.filter(e => e.category === 'TOLL').length },
+    { key: 'REPAIR', label: 'BD & Sửa chữa', count: expenses.filter(e => ['REPAIR', 'FINE', 'OTHER'].includes(e.category)).length },
+    { key: 'PENDING', label: '⏳ Chờ duyệt', count: pendingCount },
+    { key: 'APPROVED', label: '✅ Đã duyệt', count: approvedCount },
+  ];
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -107,7 +210,7 @@ export const ExpensesPage: React.FC = () => {
             Ghi nhận và xử lý các loại chi phí: Hóa đơn xăng dầu, phí BOT, sửa chữa và vé phạt vi phạm.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
+        <Button onClick={handleOpenCreate} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
           <Plus className="w-4 h-4" /> Ghi Nhận Chi Phí
         </Button>
       </div>
@@ -119,10 +222,63 @@ export const ExpensesPage: React.FC = () => {
         </div>
       )}
 
+      {/* NEW: Quick Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        {statsCards.map((s) => (
+          <div key={s.label} className={`${s.bg} rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 border border-white/60 dark:border-slate-800`}>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white/70 dark:bg-slate-800/60 shrink-0">
+              <s.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.color}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 leading-none truncate">{s.value.toLocaleString('vi-VN')}₫</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{s.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* NEW: Search bar */}
+      <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+        <Search className="w-4 h-4 text-slate-400 shrink-0" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Tìm theo biển số xe, tên tài xế, mã hóa đơn, mã chuyến..."
+          className="bg-transparent text-xs w-full focus:outline-none text-slate-900 dark:text-slate-100"
+        />
+      </div>
+
+      {/* NEW: Filter Chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+        {filterChips.map((chip) => (
+          <button
+            key={chip.key}
+            onClick={() => setFilter(chip.key)}
+            className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all border shrink-0 ${
+              filter === chip.key
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 dark:shadow-indigo-900/40'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            {chip.label}
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${
+              filter === chip.key
+                ? 'bg-white/20 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+            }`}>{chip.count}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-3">
-        {expenses.map((e) => (
-          <div key={e.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+        {filtered.map((e) => {
+          const isApproved = e.approval_status === 'APPROVED';
+          return (
+          <div key={e.id} className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border shadow-xs space-y-2 ${
+            isApproved ? 'border-emerald-200 dark:border-emerald-900' : 'border-slate-200 dark:border-slate-800'
+          }`}>
             <div className="flex items-start justify-between">
               <div>
                 <span className="font-black text-base text-slate-900 dark:text-slate-100">
@@ -130,7 +286,10 @@ export const ExpensesPage: React.FC = () => {
                 </span>
                 <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-0.5">{e.vehicle_plate}</p>
               </div>
-              {getCategoryBadge(e.category, e.category_display)}
+              <div className="flex flex-col items-end gap-1">
+                {getCategoryBadge(e.category, e.category_display)}
+                {getApprovalBadge(e.approval_status)}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -138,23 +297,55 @@ export const ExpensesPage: React.FC = () => {
               <div>Tài xế: <strong className="text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</strong></div>
               <div>Nhiên liệu: <strong className="text-blue-600 dark:text-blue-400">{e.liters ? `${e.liters} L` : '—'}</strong></div>
               <div>Đơn giá: <strong className="text-slate-800 dark:text-slate-200">{e.fuel_price_per_liter ? `${Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L` : '—'}</strong></div>
+              {/* NEW: ODO */}
+              {e.category === 'FUEL' && e.odometer_at_fuel ? (
+                <div className="col-span-2 flex items-center gap-1">
+                  <Gauge className="w-3 h-3 text-slate-400" /> ODO lúc đổ: <strong className="text-slate-800 dark:text-slate-200">{e.odometer_at_fuel?.toLocaleString('vi-VN')} km</strong>
+                </div>
+              ) : null}
+              {/* NEW: Trip Link */}
+              {e.trip_code && (
+                <div className="col-span-2 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-indigo-500" />
+                  <span>Mã chuyến: <strong className="text-indigo-600 dark:text-indigo-400">{e.trip_code}</strong></span>
+                  {e.trip_route && <span className="text-[10px] text-slate-400 truncate">({e.trip_route})</span>}
+                </div>
+              )}
               <div className="col-span-2">Hóa đơn: <strong className="font-mono text-slate-800 dark:text-slate-200">{e.invoice_number || '—'}</strong></div>
             </div>
 
             {e.notes && <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800 truncate">{e.notes}</p>}
 
-            {canDelete && (
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 w-full">
-                <button
-                  onClick={() => handleDelete(e.id)}
-                  className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Xóa chi phí
+            {/* NEW: Receipt + Action Buttons */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 w-full flex-wrap">
+              {e.receipt_image_url && (
+                <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
+                  <Paperclip className="w-3 h-3" /> Xem biên lai
                 </button>
+              )}
+              <div className="flex items-center gap-1.5 ml-auto">
+                {canManageAll && (
+                  <button onClick={() => handleEdit(e)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
+                    <Pencil className="w-3 h-3" /> Sửa
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => !isApproved && handleDelete(e.id)}
+                    disabled={isApproved}
+                    className={`px-2 py-1 text-[11px] rounded-lg flex items-center gap-1 font-semibold ${
+                      isApproved ? 'text-slate-400 cursor-not-allowed opacity-50' : 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                    }`}
+                    title={isApproved ? 'Không thể xóa hóa đơn đã được kế toán phê duyệt' : 'Xóa chi phí'}
+                  >
+                    <Trash2 className="w-3 h-3" /> Xóa
+                  </button>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {/* Desktop Table */}
@@ -163,27 +354,29 @@ export const ExpensesPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="py-3 px-4">Ngày Phát Sinh</th>
+                <th className="py-3 px-4">Ngày</th>
                 <th className="py-3 px-4">Phương Tiện</th>
                 <th className="py-3 px-4">Tài Xế</th>
-                <th className="py-3 px-4">Loại Chi Phí</th>
+                <th className="py-3 px-4">Loại</th>
+                <th className="py-3 px-4">Phê duyệt</th>
                 <th className="py-3 px-4">Số Tiền (VNĐ)</th>
-                <th className="py-3 px-4">Xăng Dầu / Đơn Giá</th>
-                <th className="py-3 px-4">Hóa Đơn / Ghi Chú</th>
+                <th className="py-3 px-4">Chi tiết</th>
+                <th className="py-3 px-4">Chuyến đi</th>
                 {canDelete && <th className="py-3 px-4 text-right">Thao Tác</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {expenses.map((e) => (
+              {filtered.map((e) => {
+                const isApproved = e.approval_status === 'APPROVED';
+                return (
                 <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                   <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">
                     {new Date(e.expense_date).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="py-3.5 px-4 font-bold text-blue-600 dark:text-blue-400">{e.vehicle_plate}</td>
                   <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</td>
-                  <td className="py-3.5 px-4">
-                    {getCategoryBadge(e.category, e.category_display)}
-                  </td>
+                  <td className="py-3.5 px-4">{getCategoryBadge(e.category, e.category_display)}</td>
+                  <td className="py-3.5 px-4">{getApprovalBadge(e.approval_status)}</td>
                   <td className="py-3.5 px-4 font-black text-slate-900 dark:text-slate-100">
                     {Number(e.amount).toLocaleString('vi-VN')} ₫
                   </td>
@@ -192,44 +385,84 @@ export const ExpensesPage: React.FC = () => {
                       <div>
                         <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{e.liters} Lít</span>
                         {e.fuel_price_per_liter && (
-                          <span className="text-[10px] text-slate-400 block">
-                            @{Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L
-                          </span>
+                          <span className="text-[10px] text-slate-400 block">@{Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L</span>
                         )}
+                        {e.odometer_at_fuel ? <span className="text-[10px] text-slate-400 block">ODO: {e.odometer_at_fuel?.toLocaleString('vi-VN')} km</span> : null}
                       </div>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <div>
+                        {e.invoice_number && (
+                          <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                            <ReceiptText className="w-3 h-3 text-emerald-500" /> {e.invoice_number}
+                          </span>
+                        )}
+                        <span className="text-[11px] truncate max-w-xs block text-slate-500">{e.notes || '—'}</span>
+                      </div>
+                    )}
+                    {e.receipt_image_url && (
+                      <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="text-[10px] text-indigo-600 hover:underline mt-0.5 flex items-center gap-0.5">
+                        <Paperclip className="w-2.5 h-2.5" /> Biên lai
+                      </button>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 text-slate-500">
-                    {e.invoice_number && (
-                      <span className="font-mono text-[10px] block font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                        <ReceiptText className="w-3 h-3 text-emerald-500 inline" /> {e.invoice_number}
-                      </span>
+                  <td className="py-3.5 px-4 text-[11px]">
+                    {e.trip_code ? (
+                      <div>
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{e.trip_code}</span>
+                        {e.trip_route && <span className="block text-[10px] text-slate-400 truncate max-w-[140px]">{e.trip_route}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 italic">Ngoài chuyến</span>
                     )}
-                    <span className="text-[11px] truncate max-w-xs block">{e.notes || '—'}</span>
                   </td>
                   {canDelete && (
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Xóa chi phí"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => handleEdit(e)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors" title="Chỉnh sửa">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => !isApproved && handleDelete(e.id)}
+                          disabled={isApproved}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            isApproved ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                          }`}
+                          title={isApproved ? 'Không thể xóa hóa đơn đã được kế toán phê duyệt' : 'Xóa chi phí'}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal Thêm Chi Phí */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Ghi Nhận Chi Phí Phát Sinh">
-        <form onSubmit={handleCreate} className="space-y-4">
+      {filtered.length === 0 && (
+        <div className="text-center py-12 text-slate-400 dark:text-slate-600">
+          <Fuel className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Không tìm thấy chi phí nào phù hợp.</p>
+        </div>
+      )}
+
+      {/* NEW: Receipt Image Modal */}
+      <Modal isOpen={!!receiptModal} onClose={() => setReceiptModal(null)} title="📎 Hóa đơn / Biên lai">
+        <div className="flex flex-col items-center gap-4">
+          {receiptModal && (
+            <img src={receiptModal} alt="Biên lai" className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg" />
+          )}
+          <p className="text-[11px] text-slate-400 text-center">Ảnh chụp biên lai / hóa đơn GTGT gốc do tài xế nộp lại kế toán.</p>
+          <Button variant="outline" onClick={() => setReceiptModal(null)}>Đóng</Button>
+        </div>
+      </Modal>
+
+      {/* Modal Thêm / Chỉnh sửa Chi Phí */}
+      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingExpense(null); }} title={editingExpense ? 'Chỉnh Sửa Chi Phí' : 'Ghi Nhận Chi Phí Mới'}>
+        <form onSubmit={editingExpense ? handleUpdate : handleCreate} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Phương tiện *</label>
@@ -259,7 +492,6 @@ export const ExpensesPage: React.FC = () => {
             </div>
           </div>
 
-          {/* UPDATE: 4 nhóm loại chi phí theo yêu cầu: Xăng dầu, BOT, sửa chữa, vé phạt */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Khoản mục chi phí *</label>
@@ -285,7 +517,7 @@ export const ExpensesPage: React.FC = () => {
           </div>
 
           {form.category === 'FUEL' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl">
               <Input
                 label="Số lít nhiên liệu"
                 type="number"
@@ -294,8 +526,7 @@ export const ExpensesPage: React.FC = () => {
                 onChange={(e) => {
                   const liters = parseFloat(e.target.value) || 0;
                   setForm(prev => ({
-                    ...prev,
-                    liters,
+                    ...prev, liters,
                     amount: prev.fuel_price_per_liter ? Math.round(liters * prev.fuel_price_per_liter) : prev.amount
                   }));
                 }}
@@ -307,11 +538,17 @@ export const ExpensesPage: React.FC = () => {
                 onChange={(e) => {
                   const price = parseFloat(e.target.value) || 0;
                   setForm(prev => ({
-                    ...prev,
-                    fuel_price_per_liter: price,
+                    ...prev, fuel_price_per_liter: price,
                     amount: prev.liters ? Math.round(prev.liters * price) : prev.amount
                   }));
                 }}
+              />
+              <Input
+                label="Chỉ số ODO (km)"
+                type="number"
+                value={form.odometer_at_fuel}
+                onChange={(e) => setForm({ ...form, odometer_at_fuel: parseInt(e.target.value) || 0 })}
+                placeholder="VD: 34500"
               />
             </div>
           )}
@@ -342,8 +579,8 @@ export const ExpensesPage: React.FC = () => {
           </div>
 
           <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setIsModalOpen(false)}>Hủy</Button>
-            <Button type="submit" className="w-full sm:w-auto">Lưu Chi Phí</Button>
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { setIsModalOpen(false); setEditingExpense(null); }}>Hủy</Button>
+            <Button type="submit" className="w-full sm:w-auto">{editingExpense ? 'Cập Nhật' : 'Lưu Chi Phí'}</Button>
           </div>
         </form>
       </Modal>
