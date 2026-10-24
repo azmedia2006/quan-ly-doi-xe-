@@ -60,6 +60,9 @@ export interface Driver {
   status: 'AVAILABLE' | 'ON_TRIP' | 'ON_LEAVE'; // // UPDATE: Đang rảnh / Đang lái / Nghỉ phép
   status_display?: string;
   avatar_url?: string;
+  current_vehicle_plate?: string | null; // // NEW: Biển số xe đang điều khiển
+  current_vehicle_model?: string | null; // // NEW: Tên/model xe đang điều khiển
+  active_trip_code?: string | null;      // // NEW: Mã chuyến đi đang thực hiện
 }
 
 // // UPDATE: Lệnh điều xe & Chuyến đi - lộ trình dự kiến, hàng hóa/hành khách
