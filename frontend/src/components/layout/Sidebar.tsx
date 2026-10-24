@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Truck, Users, CalendarDays, Wrench, Fuel,
+  LayoutDashboard, BarChart3, Truck, Users, CalendarDays, Wrench, Fuel,
   AlertTriangle, Bell, Settings, X, ShieldCheck, MapPin, DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +39,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           name: 'Bàn làm việc (Dashboard)',
           path: '/dashboard',
           icon: <LayoutDashboard className="w-5 h-5 shrink-0" />,
+        },
+        {
+          name: 'Báo cáo & Thống kê (Reports)',
+          path: '/reports',
+          icon: <BarChart3 className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'DISPATCHER', 'ACCOUNTANT'],
+          badge: 'Mới',
         },
       ],
     },
