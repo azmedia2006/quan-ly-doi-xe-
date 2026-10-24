@@ -1,24 +1,72 @@
 import React from 'react';
-import { Settings, ShieldCheck, Server, Database, Activity, ExternalLink } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Settings, ShieldCheck, Server, ExternalLink, UserCheck, Shield } from 'lucide-react';
+import { useAuth, DEMO_CREDENTIALS } from '../context/AuthContext';
+import { UserRole } from '../types';
+import { useToast } from '../components/ui/Toast';
 
 export const SettingsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, switchRole } = useAuth();
+  const { success } = useToast();
+
+  const handleRoleSwitch = async (targetRole: UserRole) => {
+    await switchRole(targetRole);
+    success(`Đã chuyển đổi môi trường sang: ${DEMO_CREDENTIALS[targetRole]?.label || targetRole}`);
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <Settings className="w-6 h-6 text-slate-600" /> Cài Đặt & Quản Trị Hệ Thống
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" /> Cài Đặt & Quản Trị Hệ Thống
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Thông tin cấu hình hạ tầng Microservices, chính sách Hardening và đường link truy cập công cụ quản trị.
+        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Quản trị hạ tầng phân tán, cấu hình bảo mật Hardening và công cụ chuyển đổi phân quyền thử nghiệm.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Công cụ chuyển đổi vai trò Demo độc lập trong trang cài đặt */}
+      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-blue-500" /> Chuyển Đổi Môi Trường Vai Trò (RBAC Simulation)
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Dành riêng cho Quản trị viên và Giảng viên chấm bài kiểm thử quyền hạn giữa các nhóm vai trò.
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+            Hiện tại: {user?.role_display}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
+          {(['ADMIN', 'DISPATCHER', 'DRIVER', 'MECHANIC', 'ACCOUNTANT'] as UserRole[]).map((r) => {
+            const isCurrent = user?.role === r;
+            const cred = DEMO_CREDENTIALS[r];
+            return (
+              <button
+                key={r}
+                onClick={() => handleRoleSwitch(r)}
+                className={`p-3 rounded-2xl text-left border transition-all ${
+                  isCurrent
+                    ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/30'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                <p className="text-xs font-bold truncate">
+                  {r === 'ADMIN' ? '👑 Admin' : r === 'DISPATCHER' ? '🚛 Điều Hành' : r === 'DRIVER' ? '👨‍✈️ Tài Xế' : r === 'MECHANIC' ? '🔧 Kỹ Thuật' : '💵 Kế Toán'}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-mono truncate">@{cred?.u}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Hạ tầng dịch vụ */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Server className="w-4 h-4 text-blue-500" /> Cổng Truy Cập Dịch Vụ Quản Trị
           </h3>
@@ -86,7 +134,7 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {/* Biện pháp Hardening & Security */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-500" /> Chính Sách Hardening Đã Áp Dụng
           </h3>
@@ -97,7 +145,7 @@ export const SettingsPage: React.FC = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-              <span><strong>Network Isolation:</strong> Phân chia 3 bridge networks độc lập (frontend, backend, monitoring), cô lập hoàn toàn PostgreSQL.</span>
+              <span><strong>Network Isolation:</strong> Phân chia 3 bridge networks độc lập, cô lập hoàn toàn database.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
@@ -105,11 +153,11 @@ export const SettingsPage: React.FC = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-              <span><strong>HTTPS / SSL Tự Ký:</strong> Mã hóa đường truyền đạt chuẩn TLS 1.2 / 1.3 với thuật toán RSA 2048-bit.</span>
+              <span><strong>WSGI Production:</strong> Chạy Gunicorn 4 workers đa luồng gthread, loại bỏ hoàn toàn dev server.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-              <span><strong>JWT Token Expiration:</strong> Cơ chế xác thực phân cấp Access Token (7 ngày) & Refresh Token (30 ngày).</span>
+              <span><strong>JWT Token Expiration:</strong> Xác thực Access Token & Refresh Token độc lập.</span>
             </li>
           </ul>
         </div>
