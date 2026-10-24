@@ -16,7 +16,7 @@ export const ReportsPage: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year'>('month');
-  const { success } = useToast();
+  const { success, error: toastError } = useToast();
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -32,30 +32,61 @@ export const ReportsPage: React.FC = () => {
     fetchReports();
   }, []);
 
+  // UPDATE: Hàm xuất báo cáo sử dụng Blob + URL.createObjectURL tương thích 100% Mobile & Safari/Chrome
   const handleExportCSV = () => {
-    const csvRows = [
-      ['BÁO CÁO VẬN HÀNH ĐỘI XE - FLEETMANAGE PRO'],
-      ['Thời điểm xuất báo cáo', new Date().toLocaleString('vi-VN')],
-      [''],
-      ['CHỈ SỐ TỔNG QUAN'],
-      ['Tổng số xe trong biên chế', data?.stats?.total_vehicles || 0],
-      ['Xe đang hoạt động chạy chuyến', data?.stats?.ontrip_vehicles || 0],
-      ['Xe sẵn sàng nhận lệnh', data?.stats?.available_vehicles || 0],
-      ['Tổng số tài xế', data?.stats?.total_drivers || 0],
-      ['Tổng số lệnh điều xe', data?.stats?.total_schedules || 0],
-      ['Tổng chi phí bảo dưỡng (VNĐ)', data?.stats?.total_maintenance_cost || 0],
-      ['Tổng chi phí xăng dầu (VNĐ)', data?.stats?.total_fuel_expense || 0],
-    ];
+    try {
+      const statsObj = data?.stats || {};
+      const csvRows = [
+        ['"BÁO CÁO VẬN HÀNH & HIỆU SUẤT ĐỘI XE - FLEETMANAGE PRO"'],
+        ['"Thời điểm xuất dữ liệu"', `"${new Date().toLocaleString('vi-VN')}"`],
+        ['"Kỳ báo cáo"', `"${timeRange === 'month' ? 'Tháng này' : timeRange === 'quarter' ? 'Quý này' : 'Cả năm'}"`],
+        [''],
+        ['"CHỈ SỐ HIỆU SUẤT"', '"GIÁ TRỊ"', '"ĐƠN VỊ TÍNH"'],
+        ['"Tổng số xe trong đội"', statsObj.total_vehicles || 0, '"Phương tiện"'],
+        ['"Xe đang chạy chuyến"', statsObj.ontrip_vehicles || 0, '"Phương tiện"'],
+        ['"Xe sẵn sàng nhận lệnh"', statsObj.available_vehicles || 0, '"Phương tiện"'],
+        ['"Xe đang bảo dưỡng/sửa chữa"', statsObj.maintenance_vehicles || 0, '"Phương tiện"'],
+        ['"Tổng số tài xế biên chế"', statsObj.total_drivers || 0, '"Nhân sự"'],
+        ['"Tài xế đang sẵn sàng"', statsObj.available_drivers || 0, '"Nhân sự"'],
+        ['"Tổng số lệnh điều xe"', statsObj.total_schedules || 0, '"Chuyến"'],
+        ['"Chuyến đang thực hiện"', statsObj.active_schedules || 0, '"Chuyến"'],
+        ['"Tổng chi phí nhiên liệu"', statsObj.total_fuel_expense || 0, '"VNĐ"'],
+        ['"Tổng chi phí bảo dưỡng"', statsObj.total_maintenance_cost || 0, '"VNĐ"'],
+        ['"Tổng ngân sách vận hành"', (statsObj.total_fuel_expense || 0) + (statsObj.total_maintenance_cost || 0), '"VNĐ"'],
+        [''],
+        ['"THỐNG KÊ CHI PHÍ CÁC THÁNG GẦN NHẤT"'],
+        ['"Tháng"', '"Chi phí Nhiên liệu (VNĐ)"', '"Chi phí Bảo dưỡng (VNĐ)"'],
+        ...(data?.charts?.monthly_trend || []).map((m: any) => [
+          `"${m.month}"`,
+          m.fuel || 0,
+          m.maintenance || 0
+        ])
+      ];
 
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + csvRows.map(e => e.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Bao_Cao_Doi_Xe_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    success('Đã xuất báo cáo CSV thành công!');
+      // Thêm BOM UTF-8 để mở bằng Excel trên điện thoại và PC không bị lỗi font Tiếng Việt
+      const csvString = '﻿' + csvRows.map(row => row.join(',')).join('\r\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const fileName = `Bao_Cao_Doi_Xe_${new Date().toISOString().slice(0, 10)}.csv`;
+
+      // Hỗ trợ cả mobile WebKit / Android / PC
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 300);
+
+      success('Xuất file thành công!', `Đã tải về máy: ${fileName}`);
+    } catch (err) {
+      console.error(err);
+      toastError('Lỗi xuất báo cáo', 'Không thể tạo file báo cáo trên trình duyệt này');
+    }
   };
 
   if (isLoading) {
