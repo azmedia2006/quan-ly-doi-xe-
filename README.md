@@ -1,105 +1,176 @@
 # FleetManage Pro – Hệ Thống Quản Lý Đội Xe Toàn Diện
 
-> **Môn học:** Triển khai và Quản trị Hệ thống Phần mềm (TKQT HTPM)  
-> **Đề tài 30:** Hệ thống Quản lý Đội xe / Fleet Management System  
-> Giao diện Tiếng Việt chuẩn hóa theo phong cách SaaS Dashboard cao cấp (Linear, Vercel, Notion aesthetic).
+<p align="center">
+  <img src="https://avatars.githubusercontent.com/u/133614406?v=4" width="96" height="96" style="border-radius: 50%;" alt="AZMEDIA Avatar" />
+</p>
+
+<p align="center">
+  <b>Tác giả / Maintainer:</b> <a href="https://github.com/azmedia2006">AZMEDIA (doanminhquanhack@gmail.com)</a><br/>
+  <b>Môn học:</b> Triển khai và Quản trị Hệ thống Phần mềm (TKQT HTPM K23)<br/>
+  <b>Đề tài:</b> Hệ thống Quản lý Đội xe / Fleet Management System
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Django-5.2-green.svg" alt="Django" />
+  <img src="https://img.shields.io/badge/React-18.3-blue.svg" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5.6-blue.svg" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-6.0-purple.svg" alt="Vite" />
+  <img src="https://img.shields.io/badge/Docker%20Compose-12%20Services-blue.svg" alt="Docker Compose" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16%20Alpine-336791.svg" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License" />
+</p>
 
 ---
 
-## 1. Công Nghệ Sử Dụng
+## 1. Giới Thiệu Tổng Quan
 
-### Frontend
-- **React 18 + TypeScript + Vite 6**
-- **Tailwind CSS v3**: Thiết kế giao diện hiện đại, tinh tế với Dark Mode / Light Mode
-- **Lucide Icons**: Bộ icon giao diện trực quan và đồng bộ
-- **Recharts**: Biểu đồ phân bổ trạng thái xe và biến động chi phí nhiên liệu / bảo dưỡng theo tháng
-- **React Router v6**: Điều hướng SPA mượt mà, phân quyền route (Role Guards)
-- **Axios**: Quản lý API client với cơ chế tự động đính kèm JWT Bearer và refresh token an toàn
-- **Avatar Tự động**: Tích hợp avatar cho toàn bộ tài khoản và tài xế bằng DiceBear API hoặc ảnh hồ sơ
-
-### Backend
-- **Python 3.12 + Django 5.2 / DRF (Django REST Framework)**
-- **SimpleJWT**: Xác thực JWT đa tầng với cơ chế cấp phát Access Token & Refresh Token
-- **drf-spectacular**: Tự động sinh tài liệu chuẩn **OpenAPI 3.0 / Swagger UI** tại `/api/docs/`
-- **django-prometheus**: Cung cấp metrics chuẩn Prometheus tại `/metrics`
-- **Cơ sở dữ liệu**: **PostgreSQL 16 Alpine** + **pgAdmin 4**
-
-### Hạ Tầng & Quản Trị Hệ Thống (DevOps / TKQT HTPM)
-- **Nginx Reverse Proxy**: Tự động chuyển hướng HTTPS (SSL/TLS tự ký), bảo mật với Security Headers (HSTS, nosniff, SAMEORIGIN...) và che giấu version `server_tokens off`.
-- **Hệ thống Giám sát (Monitoring):**
-  - **Prometheus**: Thu thập số liệu hiệu năng định kỳ từ App, PostgreSQL, Nginx và cAdvisor.
-  - **cAdvisor**: Giám sát tài nguyên phần cứng container (CPU, RAM, Network I/O).
-  - **PostgreSQL Exporter**: Thu thập chỉ số database (active connections, locks, transactions).
-  - **Nginx Exporter**: Giám sát số lượng kết nối và request của reverse proxy.
-  - **Grafana**: Hiển thị bảng điều khiển (Dashboard) trực quan các chỉ số hệ thống tại cổng `3001`.
-- **Hệ thống Log Tập Trung (Centralized Logging):**
-  - **Promtail**: Thu thập log từ container Docker và access/error log định dạng JSON của Nginx.
-  - **Loki**: Lưu trữ và đánh chỉ mục (index) log hiệu năng cao tại cổng `3100`.
-  - **LogQL**: Truy vấn, lọc log trực tiếp trên Grafana Explore.
+**FleetManage Pro** là nền tảng quản lý và điều hành đội xe vận tải thông minh được thiết kế theo kiến trúc chuẩn Doanh nghiệp (Enterprise SaaS), phục vụ trọn vẹn các yêu cầu thực hành môn **Triển khai và Quản trị Hệ thống Phần mềm (TKQT HTPM)**:
+- Giao diện người dùng thuần Việt, tối ưu đa nền tảng (Desktop & Mobile First) theo phong cách hiện đại (Linear, Vercel, Notion).
+- Phân quyền người dùng đa vai trò chuẩn **RBAC** (Admin, Dispatcher, Driver, Mechanic, Accountant).
+- Ràng buộc logic vận tải nghiêm ngặt: Kiểm tra xe và tài xế rảnh, chống trùng lịch trình, tự động đổi trạng thái khi xuất bến/hoàn tất chuyến đi.
+- Hạ tầng DevOps đầy đủ: Nginx Reverse Proxy (SSL tự ký), PostgreSQL 16, pgAdmin 4, Prometheus, Grafana, cAdvisor, PostgreSQL/Nginx Exporter, Loki, Promtail.
 
 ---
 
-## 2. Danh Sách Tài Khoản Demo Đã Tạo Sẵn
+## 2. Chi Tiết Các Phân Hệ Nghiệp Vụ Cốt Lõi
 
-Hệ thống đã được nạp sẵn cơ sở dữ liệu mẫu phong phú (Hồ sơ xe, tài xế, lịch trình vận chuyển, phiếu bảo dưỡng, hóa đơn xăng dầu BOT, báo cáo sự cố và thông báo).
+### 2.1. Quản lý Phương Tiện (Vehicles)
+- **Thông tin quản lý:** Biển kiểm soát, thương hiệu, model xe, loại xe (Xe tải `TRUCK`, Xe khách `PASSENGER`, Xe con 4-7 chỗ `CAR`, Đầu kéo `CONTAINER`, Xe van `VAN`).
+- **Thông số kỹ thuật:** Tải trọng (tấn), **năm sản xuất**, **định mức tiêu hao nhiên liệu lý thuyết (L/100km)**, số ODO lũy kế, hạn đăng kiểm và hạn bảo hiểm thân vỏ/TNDS.
+- **Trạng thái phương tiện:** Đang rảnh / Sẵn sàng (`AVAILABLE`), Đang lái / Chạy chuyến (`ON_TRIP`), Đang bảo dưỡng (`MAINTENANCE`), Đang sửa chữa (`REPAIR`), Ngưng hoạt động (`INACTIVE`).
 
-| Vai trò | Tên đăng nhập | Mật khẩu | Chức năng chính |
-|---|---|---|---|
-| **Quản trị viên (Admin)** | `admin` | `Admin@123` | Toàn quyền quản trị hệ thống, người dùng, cấu hình và giám sát |
-| **Điều hành Đội xe (Dispatcher)** | `dieuhanh` | `Dieuhanh@123` | Điều phối xe, phân công tài xế, lên lịch trình và lộ trình giao nhận |
-| **Tài xế Vận tải (Driver)** | `taixe` | `Taixe@123` | Xem lệnh điều xe, cập nhật trạng thái chuyến, báo cáo chi phí xăng dầu |
-| **Kỹ thuật / Bảo dưỡng (Mechanic)** | `kythuat` | `Kythuat@123` | Lập phiếu bảo dưỡng định kỳ, sửa chữa phụ tùng, kiểm định an toàn |
-| **Kế toán Đội xe (Accountant)** | `ketoan` | `Ketoan@123` | Quản lý hóa đơn xăng dầu, phí cầu đường BOT, chi phí bảo hiểm sự cố |
+### 2.2. Quản lý Hồ sơ Tài xế (Drivers)
+- **Thông tin cá nhân:** Mã tài xế, họ tên, số điện thoại, CCCD/CMND, **ngày sinh**, **địa chỉ thường trú**, thâm niên kinh nghiệm, điểm đánh giá sao (rating).
+- **Giấy phép lái xe (GPLX):** Số bằng, hạng bằng (B1, B2, C, D, E, FC), **ngày cấp bằng**, **ngày hết hạn bằng** (kèm cảnh báo tự động khi bằng sắp quá hạn).
+- **Trạng thái tài xế (3 mức chuẩn hóa):**
+  - **Đang rảnh / Sẵn sàng (`AVAILABLE`):** Đủ điều kiện nhận lệnh điều động mới.
+  - **Đang lái xe (`ON_TRIP`):** Đang phụ trách chuyến xe trên đường, hệ thống khóa không cho gán trùng.
+  - **Nghỉ phép (`ON_LEAVE`):** Tạm thời không nhận lịch trình.
 
-> **Mẹo nhanh:** Trên thanh Header và tại màn hình Đăng nhập có sẵn các nút bấm **"Chọn nhanh tài khoản Demo"** giúp chuyển đổi tức thì giữa các vai trò để kiểm thử tất cả các luồng nghiệp vụ.
+### 2.3. Lập Lệnh Điều Xe & Chuyến Đi (Dispatch & Trips)
+- **Quy trình gán lệnh:** Gán phương tiện + tài xế + điểm đi (`origin`) + điểm đến (`destination`) + **lộ trình dự kiến** (`route_details` - các nút giao, trạm kiểm soát) + **thông tin hàng hóa / số lượng hành khách** (`cargo_or_passenger_info`).
+- **Ràng buộc logic tự động (Business Constraints):**
+  - Chỉ cho phép chọn các phương tiện và tài xế đang ở trạng thái **Đang rảnh (`AVAILABLE`)**.
+  - **Chống trùng lịch (Anti-Conflict):** Kiểm tra đối chiếu không để xe hoặc tài xế có chuyến đi nào khác đang ở trạng thái `PLANNED` hoặc `DISPATCHED`.
+  - **Tự động chuyển đổi trạng thái:** Khi tạo lệnh xuất bến, hệ thống tự động cập nhật Xe và Tài xế sang `ON_TRIP`. Khi hoàn thành (`COMPLETED`), hủy bỏ (`CANCELLED`) hoặc xóa lệnh, trạng thái lập tức được trả về `AVAILABLE`.
+
+### 2.4. Quản lý Nhiên Liệu & Chi Phí (Expenses)
+Ghi nhận đầy đủ 4 nhóm chi phí bắt buộc trong vận hành đội xe:
+1. **Hóa đơn Xăng dầu (`FUEL`):** Số lít, đơn giá xăng dầu (VNĐ/Lít), tự động tính thành tiền, số hóa đơn GTGT.
+2. **Phí cầu đường BOT (`TOLL`):** Vé trạm thu phí đường bộ, hóa đơn trừ tiền tự động VETC/ePass.
+3. **Chi phí sửa chữa & bảo dưỡng (`REPAIR`):** Thay thế phụ tùng, công thợ, vật tư hao mòn.
+4. **Vé phạt vi phạm giao thông (`FINE`):** Biên lai phạt nguội, biên bản vi phạm luật giao thông đường bộ.
+5. **Chi phí khác (`OTHER`):** Bến bãi, rửa xe, lưu kho.
+
+### 2.5. Phân Quyền Người Dùng (Role-Based Access Control - RBAC)
+Hệ thống phân định quyền hạn bảo mật rõ ràng:
+- **Admin (`ADMIN`):** Toàn quyền kiểm soát hệ thống, quản trị người dùng, cấu hình tham số và giám sát toàn diện.
+- **Điều hành Đội xe (`DISPATCHER`):** Tạo và quản lý lệnh điều xe, giám sát lộ trình, điều phối phương tiện và tài xế.
+- **Tài xế (`DRIVER`):** Chỉ xem các lệnh điều động và lộ trình được phân công cho riêng mình (bảo mật dữ liệu cá nhân theo JWT User ID), báo cáo hóa đơn chi phí trên đường.
+- **Kế toán (`ACCOUNTANT`):** Toàn quyền thẩm định, kiểm tra hóa đơn chứng từ, phê duyệt chi phí xăng dầu, BOT và bảo hiểm.
+- **Kỹ thuật viên (`MECHANIC`):** Quản lý hồ sơ bảo dưỡng, kiểm tra ODO và lịch kiểm định phương tiện.
 
 ---
 
-## 3. Bảng Ma Trận Nghiệm Thu Tính Năng Đề Tài
+## 3. Danh Sách Tài Khoản Demo Khởi Tạo Sẵn
 
-| Mã YC | Tên chức năng | File triển khai | API liên quan | Trạng thái |
-|:---:|---|---|---|:---:|
-| **AUTH-01** | Đăng nhập JWT & Refresh token | `apps/accounts/` | `POST /api/v1/auth/login/` | **PASS** |
-| **AUTH-02** | Phân quyền đa vai trò RBAC | `apps/accounts/models.py` | Toàn bộ API endpoint | **PASS** |
-| **VEHI-01** | Quản lý Đội xe / Phương tiện (CRUD) | `apps/vehicles/` | `GET/POST/DELETE /api/v1/vehicles/` | **PASS** |
-| **VEHI-02** | Giám sát ODO, Hạn Đăng kiểm & Bảo hiểm | `src/pages/VehiclesPage.tsx` | `/api/v1/vehicles/` | **PASS** |
-| **DRIV-01** | Quản lý Hồ sơ Tài xế & Hạng GPLX (B2, C, FC) | `apps/drivers/` | `GET/POST/DELETE /api/v1/drivers/` | **PASS** |
-| **DRIV-02** | Đánh giá sao & Avatar tự động | `src/pages/DriversPage.tsx` | `/api/v1/drivers/` | **PASS** |
-| **SCHD-01** | Điều phối & Lập lịch trình chuyến đi | `apps/schedules/` | `GET/POST/DELETE /api/v1/schedules/` | **PASS** |
-| **SCHD-02** | Lộ trình xuất phát &rarr; điểm đến, cự ly km | `src/pages/SchedulesPage.tsx` | `/api/v1/schedules/` | **PASS** |
-| **MAIN-01** | Quản lý Bảo dưỡng định kỳ & Sửa chữa | `apps/maintenance/` | `GET/POST/DELETE /api/v1/maintenance/` | **PASS** |
-| **MAIN-02** | Theo dõi chi phí garage & thợ phụ trách | `src/pages/MaintenancePage.tsx` | `/api/v1/maintenance/` | **PASS** |
-| **EXPN-01** | Quản lý Nhiên liệu xăng dầu & Hóa đơn BOT | `apps/fuel_expenses/` | `GET/POST/DELETE /api/v1/expenses/` | **PASS** |
-| **INCI-01** | Báo cáo Sự cố, Tai nạn & Hồ sơ Bảo hiểm | `apps/incidents/` | `GET/POST/DELETE /api/v1/incidents/` | **PASS** |
-| **NOTI-01** | Trung tâm Thông báo & Cảnh báo hạn | `apps/notifications/` | `GET/POST /api/v1/notifications/` | **PASS** |
-| **DASH-01** | Dashboard & Biểu đồ thống kê Recharts | `src/pages/DashboardPage.tsx` | `GET /api/v1/core/dashboard-stats/` | **PASS** |
-| **SRCH-01** | Tìm kiếm toàn cục tức thì (Ctrl + K) | `src/components/layout/GlobalSearchModal.tsx` | `GET /api/v1/core/global-search/` | **PASS** |
-| **DOCS-01** | Tài liệu chuẩn OpenAPI 3.0 / Swagger UI | `drf-spectacular` | `GET /api/docs/` | **PASS** |
+Hệ thống tích hợp sẵn dữ liệu mẫu thực tế. Có thể đăng nhập bằng các tài khoản sau hoặc dùng công cụ **"Chuyển vai trò Demo tức thì"** ngay trên Header:
+
+| Vai trò | Tên đăng nhập | Mật khẩu | Quyền hạn nổi bật |
+|:---|:---|:---|:---|
+| **Quản trị viên (Admin)** | `admin` | `Admin@123` | Quản trị toàn hệ thống, toàn bộ module |
+| **Điều hành Đội xe (Dispatcher)** | `dieuhanh` | `Dieuhanh@123` | Lập lệnh điều xe, chọn xe & tài xế rảnh, phân tuyến |
+| **Tài xế (Driver)** | `taixe` | `Taixe@123` | Chỉ xem lệnh của mình, nộp chi phí phát sinh |
+| **Kỹ thuật viên (Mechanic)** | `kythuat` | `Kythuat@123` | Lập phiếu bảo dưỡng, quản lý ODO, sửa chữa xe |
+| **Kế toán Đội xe (Accountant)** | `ketoan` | `Ketoan@123` | Thẩm định chi phí, hóa đơn xăng dầu, phí BOT, phạt |
 
 ---
 
-## 4. Hướng Dẫn Khởi Chạy Bằng Docker Compose
+## 4. Kiến Trúc Hạ Tầng & Công Nghệ
 
+```
+                                  [ Client Browser / Mobile ]
+                                               │
+                                  (HTTPS: 443 / HTTP: 80)
+                                               ▼
+                                 ┌──────────────────────────┐
+                                 │       fleet-nginx        │
+                                 │   Reverse Proxy + SSL    │
+                                 └─────────────┬────────────┘
+                                               │
+                        ┌──────────────────────┴──────────────────────┐
+                        ▼                                             ▼
+         ┌─────────────────────────────┐               ┌─────────────────────────────┐
+         │       fleet-frontend        │               │        fleet-backend        │
+         │  React 18 + TS + Vite (SPA) │               │   Django 5.2 + DRF REST API │
+         └─────────────────────────────┘               └──────────────┬──────────────┘
+                                                                      │
+                                                       ┌──────────────┴──────────────┐
+                                                       ▼                             ▼
+                                        ┌─────────────────────────────┐ ┌───────────────────────────┐
+                                        │       fleet-postgres        │ │       fleet-pgadmin       │
+                                        │     PostgreSQL 16 Alpine    │ │     DB Administration     │
+                                        └──────────────┬──────────────┘ └───────────────────────────┘
+                                                       │
+         ┌─────────────────────────────────────────────┴────────────────────────────────────────────┐
+         │                                   MONITORING & LOGGING                                   │
+         │                                                                                          │
+         │   ┌────────────────┐     ┌────────────────┐     ┌────────────────┐     ┌─────────────┐   │
+         │   │ fleet-cadvisor │     │ fleet-postgres-│     │ fleet-nginx-   │     │ fleet-loki  │   │
+         │   │ (Container HW) │     │ exporter       │     │ exporter       │     │ (Log Store) │   │
+         │   └───────┬────────┘     └───────┬────────┘     └───────┬────────┘     └──────┬──────┘   │
+         │           │                      │                      │                     │          │
+         │           ▼                      ▼                      ▼                     │          │
+         │   ┌──────────────────────────────────────────────────────────────┐            │          │
+         │   │                       fleet-prometheus                       │            ▼          │
+         │   │                     (Metrics Collector)                      │     ┌─────────────┐   │
+         │   └──────────────────────────────┬───────────────────────────────┘     │fleet-promtail   │
+         │                                  │                                     │(Log Shipper)│   │
+         │                                  ▼                                     └──────┬──────┘   │
+         │   ┌──────────────────────────────────────────────────────────────┐            │          │
+         │   │                         fleet-grafana                        │◀───────────┘          │
+         │   │              (Dashboard Visualization :3001)                 │                       │
+         │   └──────────────────────────────────────────────────────────────┘                       │
+         └──────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 5. Hướng Dẫn Cài Đặt & Triển Khai (Docker Compose)
+
+### 5.1. Yêu cầu môi trường
+- Docker Engine >= 24.0
+- Docker Compose v2
+
+### 5.2. Khởi chạy toàn bộ hệ thống
 ```bash
+# Clone source code
 git clone https://github.com/azmedia2006/quan-ly-doi-xe-.git
 cd quan-ly-doi-xe-
+
+# Khởi chạy 12 services nền tảng
 docker compose up -d --build
 ```
 
-Kiểm tra trạng thái các container:
+Kiểm tra trạng thái hoạt động:
 ```bash
 docker compose ps
 ```
 
 ---
 
-## 5. Danh Mục Cổng Truy Cập Dịch Vụ Trên VPS
+## 6. Danh Mục Cổng Truy Cập Dịch Vụ
 
-| Dịch vụ | Địa chỉ URL | Ghi chú & Tài khoản |
-| :--- | :--- | :--- |
-| **Website Quản Lý Đội Xe (SPA)** | `https://180.93.114.74` hoặc `http://180.93.114.74` | Đăng nhập tài khoản mẫu: `admin` / `Admin@123` |
-| **Tài liệu Swagger API** | `https://180.93.114.74/api/docs/` | Xem và thử nghiệm trực tiếp toàn bộ REST API |
-| **pgAdmin 4 (Quản trị DB)** | `https://180.93.114.74/pgadmin/` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
+| Dịch vụ | Địa chỉ URL | Thông tin xác thực |
+|:---|:---|:---|
+| **Hệ thống Quản Lý Đội Xe (Web App)** | `https://180.93.114.74` hoặc `http://180.93.114.74` | Đăng nhập tài khoản mẫu ở Mục 3 |
+| **Tài liệu Swagger / OpenAPI 3.0** | `https://180.93.114.74/api/docs/` | Xem và Test trực tiếp toàn bộ REST API |
+| **pgAdmin 4 (Quản trị Database)** | `https://180.93.114.74/pgadmin/` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
 | **Grafana Monitoring Dashboard** | `http://180.93.114.74:3001` | User: `admin` / Pass: `admin` |
-| **Prometheus Web UI** | `http://180.93.114.74:9090` | Thu thập metrics hệ thống |
-| **Loki Centralized Logging** | `http://180.93.114.74:3100` | Cổng lưu trữ và truy vấn log |
+| **Prometheus Metrics Engine** | `http://180.93.114.74:9090` | Thu thập metrics hiệu năng hệ thống |
+| **Loki Centralized Logging** | `http://180.93.114.74:3100` | Cổng lưu trữ và truy vấn LogQL |
+
+---
+
+## 7. Giấy phép (License)
+Phát hành theo giấy phép MIT. Toàn quyền sử dụng phục vụ học tập, nghiên cứu và phát triển sản phẩm.
