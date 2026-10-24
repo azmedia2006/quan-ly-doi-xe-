@@ -20,7 +20,7 @@ export interface User {
   address?: string;
 }
 
-// // UPDATE: Quản lý xe - Thêm loại xe (tải, khách, con), năm sản xuất, định mức nhiên liệu lý thuyết
+// // UPDATE: Quản lý xe - Thêm loại xe (tải, khách, con), năm sản xuất, định mức nhiên liệu lý thuyết, tài xế phụ trách
 export interface Vehicle {
   id: number;
   plate_number: string;
@@ -38,6 +38,8 @@ export interface Vehicle {
   status: 'AVAILABLE' | 'ON_TRIP' | 'MAINTENANCE' | 'REPAIR' | 'INACTIVE';
   status_display?: string;
   notes?: string;
+  current_driver_name?: string | null; // // NEW: Tên tài xế phụ trách đang chạy chuyến
+  active_trip_code?: string | null; // // NEW: Mã lệnh điều xe hiện tại
 }
 
 // // UPDATE: Quản lý tài xế - Thông tin cá nhân, ngày cấp/hết hạn bằng, 3 trạng thái
