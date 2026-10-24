@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Plus, Search, Trash2 } from 'lucide-react';
+import { Truck, Plus, Search, Trash2, Fuel, Calendar } from 'lucide-react';
 import api from '../services/api';
 import { Vehicle } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export const VehiclesPage: React.FC = () => {
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // // UPDATE: Bổ sung Biển số, loại xe (tải, khách, con), tải trọng, năm SX, định mức nhiên liệu lý thuyết
   const [form, setForm] = useState({
     plate_number: '',
     model_name: '',
     brand: 'Hyundai',
-    vehicle_type: 'TRUCK_MEDIUM',
+    vehicle_type: 'TRUCK',
     payload_capacity: 5.0,
+    manufacture_year: 2022,
+    fuel_consumption_rate: 12.5,
     fuel_type: 'Diesel DO 0.05S',
     odometer: 0,
     status: 'AVAILABLE',
@@ -46,8 +52,10 @@ export const VehiclesPage: React.FC = () => {
         plate_number: '',
         model_name: '',
         brand: 'Hyundai',
-        vehicle_type: 'TRUCK_MEDIUM',
+        vehicle_type: 'TRUCK',
         payload_capacity: 5.0,
+        manufacture_year: 2022,
+        fuel_consumption_rate: 12.5,
         fuel_type: 'Diesel DO 0.05S',
         odometer: 0,
         status: 'AVAILABLE',
@@ -69,6 +77,8 @@ export const VehiclesPage: React.FC = () => {
     }
   };
 
+  const canEdit = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' || user?.role === 'DISPATCHER';
+
   const filtered = vehicles.filter(v =>
     v.plate_number.toLowerCase().includes(search.toLowerCase()) ||
     v.model_name.toLowerCase().includes(search.toLowerCase())
@@ -83,12 +93,14 @@ export const VehiclesPage: React.FC = () => {
             <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" /> Quản Lý Đội Xe (Vehicles)
           </h1>
           <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
-            Theo dõi danh sách phương tiện, trọng tải, chỉ số ODO và đăng kiểm.
+            Theo dõi loại xe (tải, khách, con), tải trọng, năm sản xuất, định mức tiêu hao lý thuyết và chỉ số ODO.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
-          <Plus className="w-4 h-4" /> Thêm Xe Mới
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
+            <Plus className="w-4 h-4" /> Thêm Xe Mới
+          </Button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -98,7 +110,7 @@ export const VehiclesPage: React.FC = () => {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm theo biển số hoặc model xe..."
+          placeholder="Tìm theo biển số, model xe..."
           className="bg-transparent text-xs w-full focus:outline-none text-slate-900 dark:text-slate-100"
         />
       </div>
@@ -126,18 +138,22 @@ export const VehiclesPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div>Loại xe: <strong className="text-slate-800 dark:text-slate-200">{v.vehicle_type_display || v.vehicle_type}</strong></div>
               <div>Tải trọng: <strong className="text-slate-800 dark:text-slate-200">{v.payload_capacity} tấn</strong></div>
+              <div>Năm SX: <strong className="text-slate-800 dark:text-slate-200">{v.manufacture_year || '—'}</strong></div>
+              <div>Định mức: <strong className="text-blue-600 dark:text-blue-400">{v.fuel_consumption_rate || '—'} L/100km</strong></div>
               <div>ODO: <strong className="font-mono text-slate-800 dark:text-slate-200">{v.odometer.toLocaleString('vi-VN')} km</strong></div>
               <div>Đăng kiểm: <strong className="text-slate-800 dark:text-slate-200">{v.registration_expiry || 'Còn hạn'}</strong></div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-              <button
-                onClick={() => handleDelete(v.id)}
-                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Xóa xe
-              </button>
-            </div>
+            {canEdit && (
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button
+                  onClick={() => handleDelete(v.id)}
+                  className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-1 font-semibold"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Xóa xe
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -150,12 +166,13 @@ export const VehiclesPage: React.FC = () => {
               <tr>
                 <th className="py-3 px-4">Biển Số</th>
                 <th className="py-3 px-4">Model & Thương Hiệu</th>
-                <th className="py-3 px-4">Chủng Loại</th>
+                <th className="py-3 px-4">Phân Loại Xe</th>
                 <th className="py-3 px-4">Tải Trọng</th>
+                <th className="py-3 px-4">Năm SX</th>
+                <th className="py-3 px-4">Định Mức Lý Thuyết</th>
                 <th className="py-3 px-4">Chỉ Số ODO</th>
-                <th className="py-3 px-4">Hạn Đăng Kiểm</th>
                 <th className="py-3 px-4">Trạng Thái</th>
-                <th className="py-3 px-4 text-right">Thao Tác</th>
+                {canEdit && <th className="py-3 px-4 text-right">Thao Tác</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -166,12 +183,17 @@ export const VehiclesPage: React.FC = () => {
                     {v.model_name}
                     <span className="text-[10px] text-slate-400 block font-normal">{v.brand}</span>
                   </td>
-                  <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">{v.vehicle_type_display || v.vehicle_type}</td>
+                  <td className="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">
+                    {v.vehicle_type_display || v.vehicle_type}
+                  </td>
                   <td className="py-3.5 px-4 font-bold">{v.payload_capacity} tấn</td>
+                  <td className="py-3.5 px-4 font-medium">{v.manufacture_year || '—'}</td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-blue-600 dark:text-blue-400">
+                    {v.fuel_consumption_rate ? `${v.fuel_consumption_rate} L/100km` : '—'}
+                  </td>
                   <td className="py-3.5 px-4 font-mono font-bold text-slate-700 dark:text-slate-300">
                     {v.odometer.toLocaleString('vi-VN')} km
                   </td>
-                  <td className="py-3.5 px-4 text-slate-500">{v.registration_expiry || 'Còn hiệu lực'}</td>
                   <td className="py-3.5 px-4">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                       v.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
@@ -181,15 +203,17 @@ export const VehiclesPage: React.FC = () => {
                       {v.status_display || v.status}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => handleDelete(v.id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                      title="Xóa phương tiện"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+                  {canEdit && (
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => handleDelete(v.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        title="Xóa phương tiện"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -208,7 +232,7 @@ export const VehiclesPage: React.FC = () => {
             required
           />
           <Input
-            label="Model xe *"
+            label="Model xe & Thương hiệu *"
             value={form.model_name}
             onChange={(e) => setForm({ ...form, model_name: e.target.value })}
             placeholder="VD: Hino 500 Series FL"
@@ -216,22 +240,21 @@ export const VehiclesPage: React.FC = () => {
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Loại xe</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Loại xe *</label>
               <select
                 value={form.vehicle_type}
                 onChange={(e) => setForm({ ...form, vehicle_type: e.target.value })}
                 className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
               >
-                <option value="TRUCK_LIGHT">Xe tải nhẹ (&lt; 3.5 tấn)</option>
-                <option value="TRUCK_MEDIUM">Xe tải trung (3.5 - 8 tấn)</option>
-                <option value="TRUCK_HEAVY">Xe tải nặng (&gt; 8 tấn)</option>
+                <option value="TRUCK">Xe tải</option>
+                <option value="PASSENGER">Xe khách</option>
+                <option value="CAR">Xe con (du lịch / 4-7 chỗ)</option>
                 <option value="CONTAINER">Xe đầu kéo container</option>
                 <option value="VAN">Xe van giao hàng</option>
-                <option value="PASSENGER">Xe đưa đón nhân sự</option>
               </select>
             </div>
             <Input
-              label="Tải trọng (tấn)"
+              label="Tải trọng (tấn) *"
               type="number"
               step="0.1"
               value={form.payload_capacity}
@@ -240,20 +263,37 @@ export const VehiclesPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              label="Chỉ số ODO (km)"
+              label="Năm sản xuất *"
+              type="number"
+              value={form.manufacture_year}
+              onChange={(e) => setForm({ ...form, manufacture_year: parseInt(e.target.value) || 2022 })}
+              placeholder="VD: 2023"
+            />
+            <Input
+              label="Định mức nhiên liệu lý thuyết (L/100km) *"
+              type="number"
+              step="0.1"
+              value={form.fuel_consumption_rate}
+              onChange={(e) => setForm({ ...form, fuel_consumption_rate: parseFloat(e.target.value) || 12 })}
+              placeholder="VD: 14.5"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Chỉ số ODO hiện tại (km)"
               type="number"
               value={form.odometer}
               onChange={(e) => setForm({ ...form, odometer: parseInt(e.target.value) || 0 })}
             />
             <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Trạng thái</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Trạng thái xe</label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
               >
-                <option value="AVAILABLE">Sẵn sàng</option>
-                <option value="ON_TRIP">Đang chạy chuyến</option>
+                <option value="AVAILABLE">Đang rảnh / Sẵn sàng</option>
+                <option value="ON_TRIP">Đang lái / Chạy chuyến</option>
                 <option value="MAINTENANCE">Đang bảo dưỡng</option>
               </select>
             </div>

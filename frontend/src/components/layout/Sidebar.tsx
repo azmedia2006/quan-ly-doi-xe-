@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Truck, Users, CalendarDays, Wrench, Fuel,
-  AlertTriangle, Bell, Settings, X
+  AlertTriangle, Bell, Settings, X, ShieldCheck, MapPin, DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
@@ -30,6 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
   const { user } = useAuth();
   const currentRole = user?.role || 'ADMIN';
 
+  // Role-based Nav Structure: Each role has tailored menus
   const navGroups: NavGroup[] = [
     {
       group: 'TỔNG QUAN',
@@ -48,17 +49,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           name: 'Quản lý Đội xe (Vehicles)',
           path: '/vehicles',
           icon: <Truck className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'DISPATCHER', 'MECHANIC'],
         },
         {
           name: 'Hồ sơ Tài xế (Drivers)',
           path: '/drivers',
           icon: <Users className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'DISPATCHER'],
         },
         {
           name: 'Lịch trình & Chuyến đi',
           path: '/schedules',
           icon: <CalendarDays className="w-5 h-5 shrink-0" />,
-          badge: 'Live',
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'DISPATCHER', 'DRIVER'],
+          badge: currentRole === 'DRIVER' ? 'Việc của tôi' : 'Live',
         },
       ],
     },
@@ -69,16 +73,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           name: 'Bảo dưỡng & Sửa chữa',
           path: '/maintenance',
           icon: <Wrench className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'MECHANIC', 'ACCOUNTANT'],
+          badge: currentRole === 'MECHANIC' ? 'Xưởng' : undefined,
         },
         {
           name: 'Nhiên liệu & Chi phí',
           path: '/expenses',
           icon: <Fuel className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'ACCOUNTANT', 'DRIVER'],
+          badge: currentRole === 'ACCOUNTANT' ? 'Kế toán' : undefined,
         },
         {
           name: 'Sự cố & Bảo hiểm',
           path: '/incidents',
           icon: <AlertTriangle className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN', 'DISPATCHER', 'MECHANIC', 'ACCOUNTANT', 'DRIVER'],
         },
       ],
     },
@@ -94,6 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           name: 'Cài đặt & Giám sát',
           path: '/settings',
           icon: <Settings className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN'],
         },
       ],
     },
@@ -102,10 +112,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 flex flex-col justify-between shadow-2xl lg:shadow-none ${
-        // Mobile visibility
         isMobileOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'
       } ${
-        // Desktop collapsed state
         isCollapsed ? 'lg:w-20' : 'lg:w-64'
       }`}
     >
@@ -128,7 +136,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
             )}
           </div>
 
-          {/* Close button for mobile */}
           <button
             onClick={onCloseMobile}
             className="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -137,8 +144,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           </button>
         </div>
 
+        {/* User Role Badge in Sidebar */}
+        {(!isCollapsed || isMobileOpen) && (
+          <div className="px-4 py-2.5 mx-3 mt-3 rounded-2xl bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Không gian làm việc</p>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                {user?.role_display || 'Quản trị viên'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Groups */}
-        <div className="p-3 space-y-5 overflow-y-auto max-h-[calc(100vh-10rem)]">
+        <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-13rem)]">
           {navGroups.map((group, gIdx) => {
             const filteredItems = group.items.filter((item) => {
               if (!item.allowedRoles) return true;
@@ -173,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
                       <span className="truncate flex-1">{item.name}</span>
                     )}
                     {(!isCollapsed || isMobileOpen) && item.badge && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                         {item.badge}
                       </span>
                     )}
@@ -193,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
               <p className="font-bold text-slate-700 dark:text-slate-300">FleetManage v2.0</p>
               <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                Hệ thống sẵn sàng
+                Phiên làm việc bảo mật
               </p>
             </div>
           </div>
