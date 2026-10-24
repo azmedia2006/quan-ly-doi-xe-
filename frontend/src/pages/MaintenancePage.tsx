@@ -135,11 +135,12 @@ export const MaintenancePage: React.FC = () => {
   const handleComplete = async (id: number) => {
     if (!window.confirm('Xác nhận nghiệm thu hoàn tất phiếu bảo dưỡng này? Phương tiện sẽ chuyển về trạng thái Sẵn sàng.')) return;
     try {
-      await api.post(`/maintenance/${id}/complete/`);
+      await api.post(`/maintenance/${id}/complete/`, {});
       success('Đã nghiệm thu hoàn tất! Phương tiện đã sẵn sàng vận hành.');
       fetchData();
-    } catch (e) {
-      error('Lỗi nghiệm thu');
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.response?.data?.message || err.message || 'Lỗi nghiệm thu';
+      error('Lỗi nghiệm thu', msg);
     }
   };
 
