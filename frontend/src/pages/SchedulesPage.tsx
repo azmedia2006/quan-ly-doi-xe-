@@ -117,7 +117,7 @@ export const SchedulesPage: React.FC = () => {
           </p>
         </div>
         {canDispatch && (
-          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
+          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
             <Plus className="w-4 h-4" /> Lập Lệnh Điều Xe
           </Button>
         )}

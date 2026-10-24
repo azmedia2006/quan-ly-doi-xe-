@@ -91,7 +91,7 @@ export const DriversPage: React.FC = () => {
           </p>
         </div>
         {canEdit && (
-          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
+          <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
             <Plus className="w-4 h-4" /> Thêm Tài Xế Mới
           </Button>
         )}

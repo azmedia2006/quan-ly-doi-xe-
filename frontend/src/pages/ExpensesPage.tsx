@@ -107,7 +107,7 @@ export const ExpensesPage: React.FC = () => {
             Ghi nhận và xử lý các loại chi phí: Hóa đơn xăng dầu, phí BOT, sửa chữa và vé phạt vi phạm.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
           <Plus className="w-4 h-4" /> Ghi Nhận Chi Phí
         </Button>
       </div>

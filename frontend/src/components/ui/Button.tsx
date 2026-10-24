@@ -20,7 +20,7 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+  const baseStyles = 'inline-flex flex-row items-center justify-center font-medium rounded-xl transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
   const variants = {
     primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow focus:ring-brand-500 border border-transparent',
@@ -42,13 +42,15 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading ? (
-        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-      ) : (
-        leftIcon && <span className="shrink-0">{leftIcon}</span>
-      )}
-      <span>{children}</span>
-      {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
+      <span className="inline-flex flex-row items-center justify-center gap-2 w-auto leading-none">
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+        ) : (
+          leftIcon && <span className="inline-flex shrink-0 items-center">{leftIcon}</span>
+        )}
+        <span className="inline-block whitespace-nowrap">{children}</span>
+        {!isLoading && rightIcon && <span className="inline-flex shrink-0 items-center">{rightIcon}</span>}
+      </span>
     </button>
   );
 };

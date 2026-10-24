@@ -77,7 +77,7 @@ export const MaintenancePage: React.FC = () => {
             Theo dõi bảo trì theo ODO, thay thế phụ tùng, xưởng thực hiện và chi phí.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
           <Plus className="w-4 h-4" /> Tạo Phiếu Bảo Dưỡng
         </Button>
       </div>
