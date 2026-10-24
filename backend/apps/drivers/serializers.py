@@ -28,7 +28,7 @@ class DriverSerializer(serializers.ModelSerializer):
             status__in=[TripSchedule.Status.DISPATCHED, TripSchedule.Status.PLANNED]
         ).order_by('-departure_time').first()
         if active_trip and active_trip.vehicle:
-            return active_trip.vehicle.model
+            return active_trip.vehicle.model_name
         return None
 
     def get_active_trip_code(self, obj):
