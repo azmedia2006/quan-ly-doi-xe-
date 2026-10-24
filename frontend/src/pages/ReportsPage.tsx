@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  PieChart, Pie, Cell, LineChart, Line, Legend
+  PieChart, Pie, Cell, Legend
 } from 'recharts';
 import api from '../services/api';
 import { Button } from '../components/ui/Button';
@@ -67,10 +67,10 @@ export const ReportsPage: React.FC = () => {
 
   // Custom data for fuel breakdown
   const expenseCategories = [
-    { name: 'Xăng dầu (Fuel)', value: 65, color: '#f59e0b', amount: stats.total_fuel_expense || 0 },
-    { name: 'Phí cầu đường (BOT)', value: 15, color: '#3b82f6', amount: (stats.total_fuel_expense || 0) * 0.25 },
-    { name: 'Bảo dưỡng / Sửa chữa', value: 15, color: '#a855f7', amount: stats.total_maintenance_cost || 0 },
-    { name: 'Vé phạt & sự cố', value: 5, color: '#ef4444', amount: 3500000 },
+    { name: 'Xăng dầu (Fuel)', value: 65, color: '#f59e0b' },
+    { name: 'Phí cầu đường (BOT)', value: 15, color: '#3b82f6' },
+    { name: 'Bảo dưỡng / Sửa chữa', value: 15, color: '#a855f7' },
+    { name: 'Vé phạt & sự cố', value: 5, color: '#ef4444' },
   ];
 
   return (
@@ -86,23 +86,24 @@ export const ReportsPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
+        {/* Filters and export button (Wrap nicely on mobile) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs w-full sm:w-auto justify-between">
             <button
               onClick={() => setTimeRange('month')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${timeRange === 'month' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'}`}
+              className={`flex-1 sm:flex-initial text-center px-3 py-1.5 rounded-lg font-semibold transition-all ${timeRange === 'month' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'}`}
             >
               Tháng này
             </button>
             <button
               onClick={() => setTimeRange('quarter')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${timeRange === 'quarter' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'}`}
+              className={`flex-1 sm:flex-initial text-center px-3 py-1.5 rounded-lg font-semibold transition-all ${timeRange === 'quarter' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'}`}
             >
               Quý này
             </button>
             <button
               onClick={() => setTimeRange('year')}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all ${timeRange === 'year' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'}`}
+              className={`flex-1 sm:flex-initial text-center px-3 py-1.5 rounded-lg font-semibold transition-all ${timeRange === 'year' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'}`}
             >
               Cả năm
             </button>
@@ -117,8 +118,8 @@ export const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* Summary KPI Cards (Responsive grid 1 col on xs, 2 on sm, 4 on lg) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Hiệu suất đội xe</p>
           <div className="mt-1 flex items-baseline justify-between">
@@ -167,22 +168,22 @@ export const ReportsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Monthly Expense & Fuel Comparison */}
         <div className="lg:col-span-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-4">
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
-              So Sánh Chi Phí Xăng Dầu & Bảo Dưỡng Các Tháng (VNĐ)
+              So Sánh Chi Phí Xăng Dầu & Bảo Dưỡng (VNĐ)
             </h3>
-            <span className="text-[11px] text-slate-400">Đơn vị: VNĐ</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-400">Đơn vị: VNĐ</span>
           </div>
 
-          <div className="h-64 sm:h-72">
+          <div className="h-60 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={charts.monthly_trend || []}>
+              <BarChart data={charts.monthly_trend || []} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(val: number) => `${val / 1000000}M`} />
                 <Tooltip formatter={(value: any) => `${Number(value).toLocaleString('vi-VN')} ₫`} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                 <Bar dataKey="fuel" name="Chi phí Nhiên liệu" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="maintenance" name="Bảo dưỡng & Sửa chữa" fill="#a855f7" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -197,7 +198,7 @@ export const ReportsPage: React.FC = () => {
             Cơ Cấu Các Loại Chi Phí
           </h3>
 
-          <div className="h-48 sm:h-56">
+          <div className="h-44 sm:h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -206,8 +207,8 @@ export const ReportsPage: React.FC = () => {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
+                  innerRadius={45}
+                  outerRadius={65}
                   paddingAngle={4}
                 >
                   {expenseCategories.map((entry, index) => (
@@ -219,21 +220,21 @@ export const ReportsPage: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
             {expenseCategories.map((item, idx) => (
               <div key={idx} className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                  {item.name}
+                <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 truncate">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="truncate">{item.name}</span>
                 </span>
-                <strong className="text-slate-900 dark:text-slate-100">{item.value}%</strong>
+                <strong className="text-slate-900 dark:text-slate-100 shrink-0 ml-1">{item.value}%</strong>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Deep-dive Advanced Grafana / Prometheus Real-time telemetry */}
+      {/* Deep-dive Advanced Grafana Telemetry */}
       <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-[10px] font-semibold text-blue-300">
@@ -251,7 +252,7 @@ export const ReportsPage: React.FC = () => {
           href="http://180.93.114.74:3001"
           target="_blank"
           rel="noreferrer"
-          className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold shadow-md inline-flex items-center justify-center gap-2"
+          className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold shadow-md inline-flex items-center justify-center gap-2 shrink-0"
         >
           Mở Grafana Dashboard <ArrowUpRight className="w-4 h-4" />
         </a>
