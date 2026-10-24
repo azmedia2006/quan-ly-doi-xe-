@@ -125,10 +125,13 @@ export interface MaintenanceRecord {
   service_type: string;
   service_type_display?: string;
   odometer_at_service: number;
+  next_due_odo?: number;
+  next_due_date?: string;
   service_date: string;
   garage_name: string;
   cost: number;
   details: string;
+  parts_replaced?: string;
   technician_name?: string;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   status_display?: string;
