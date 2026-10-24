@@ -104,7 +104,13 @@ export const SettingsPage: React.FC = () => {
   const [telegramBotToken, setTelegramBotToken] = useState('');
   const [telegramChatId, setTelegramChatId] = useState('');
   const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
-  const [smtpEmail, setSmtpEmail] = useState('');
+  const [smtpPort, setSmtpPort] = useState(587);
+  const [smtpUser, setSmtpUser] = useState('fleet.system@company.vn');
+  const [smtpPassword, setSmtpPassword] = useState('');
+  const [smtpSenderName, setSmtpSenderName] = useState('FleetManage Pro System');
+  const [smtpEncryption, setSmtpEncryption] = useState<'TLS' | 'SSL' | 'NONE'>('TLS');
+  const [smtpEmail, setSmtpEmail] = useState('fleet.notifications@company.vn');
+  const [testReceiverEmail, setTestReceiverEmail] = useState('admin@company.vn');
 
   const handleRoleSwitch = async (targetRole: UserRole) => {
     await switchRole(targetRole);
@@ -419,11 +425,74 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           <div className={cardCls}>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"><Webhook className="w-4 h-4 text-purple-500" /> Cấu Hình Email SMTP</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Webhook className="w-4 h-4 text-purple-500" /> Cấu Hình Email SMTP (Gửi Thông Báo / Cảnh Báo Tự Động)
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                Giao thức SMTP
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-              <div><label className={labelCls}>SMTP Host</label><input value={smtpHost} onChange={e => setSmtpHost(e.target.value)} className={inputCls} /></div>
-              <div><label className={labelCls}>Email gửi đi</label><input value={smtpEmail} onChange={e => setSmtpEmail(e.target.value)} placeholder="fleet@company.vn" className={inputCls} /></div>
-              <div className="flex items-end"><button onClick={() => success('Gửi email test thành công!')} className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"><Send className="w-3.5 h-3.5" /> Test Email</button></div>
+              <div>
+                <label className={labelCls}>Máy chủ SMTP (Host) *</label>
+                <input value={smtpHost} onChange={e => setSmtpHost(e.target.value)} placeholder="VD: smtp.gmail.com" className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Cổng kết nối (Port) *</label>
+                <input type="number" value={smtpPort} onChange={e => setSmtpPort(+e.target.value)} placeholder="587 hoặc 465" className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Phương thức mã hóa</label>
+                <select value={smtpEncryption} onChange={e => setSmtpEncryption(e.target.value as any)} className={inputCls}>
+                  <option value="TLS">STARTTLS (Khuyên dùng - Port 587)</option>
+                  <option value="SSL">SSL / TLS (Port 465)</option>
+                  <option value="NONE">Không mã hóa (Port 25)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={labelCls}>Tên tài khoản đăng nhập (Username) *</label>
+                <input value={smtpUser} onChange={e => setSmtpUser(e.target.value)} placeholder="VD: notifications@company.vn" className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Mật khẩu ứng dụng (App Password) *</label>
+                <input type="password" value={smtpPassword} onChange={e => setSmtpPassword(e.target.value)} placeholder="••••••••••••••••" className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Tên hiển thị người gửi (Sender Name)</label>
+                <input value={smtpSenderName} onChange={e => setSmtpSenderName(e.target.value)} placeholder="VD: Hệ Thống Quản Lý Đội Xe" className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Địa chỉ Email gửi đi (From Email) *</label>
+                <input type="email" value={smtpEmail} onChange={e => setSmtpEmail(e.target.value)} placeholder="fleet.system@company.vn" className={inputCls} />
+              </div>
+
+              <div>
+                <label className={labelCls}>Email nhận thử nghiệm (Test Receiver)</label>
+                <input type="email" value={testReceiverEmail} onChange={e => setTestReceiverEmail(e.target.value)} placeholder="admin@company.vn" className={inputCls} />
+              </div>
+
+              <div className="flex items-end gap-2">
+                <button
+                  onClick={() => success('Đã gửi email test tới: ' + (testReceiverEmail || 'admin@company.vn'))}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
+                >
+                  <Send className="w-3.5 h-3.5" /> Gửi Thử Email
+                </button>
+                <button
+                  onClick={() => success('Đã lưu cấu hình SMTP thành công!')}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold whitespace-nowrap"
+                >
+                  Lưu Cấu Hình
+                </button>
+              </div>
             </div>
           </div>
         </div>
