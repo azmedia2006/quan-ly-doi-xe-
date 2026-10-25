@@ -548,7 +548,7 @@ export const ExpensesPage: React.FC = () => {
           return (
             <div className="space-y-4 max-h-[82vh] overflow-y-auto pr-1">
               {/* Paper styled e-Invoice sheet */}
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 sm:p-6 bg-white text-slate-900 shadow-sm space-y-4">
+              <div id="invoice-printable-area" className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 sm:p-6 bg-white text-slate-900 shadow-sm space-y-4">
                 
                 {/* 1. Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3 pb-3 border-b border-slate-200">
@@ -760,7 +760,7 @@ export const ExpensesPage: React.FC = () => {
               )}
 
               {/* Action Buttons Footer */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div className="no-print flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
