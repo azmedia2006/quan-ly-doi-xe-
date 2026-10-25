@@ -107,13 +107,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           icon: <Bell className="w-5 h-5 shrink-0" />,
         },
         {
-          name: 'Quản lý Tài khoản',
-          path: '/users',
-          icon: <UserCog className="w-5 h-5 shrink-0" />,
-          allowedRoles: ['ADMIN', 'SUPERADMIN'],
-          badge: 'Admin',
-        },
-        {
           name: 'Cài đặt & Giám sát',
           path: '/settings',
           icon: <Settings className="w-5 h-5 shrink-0" />,
