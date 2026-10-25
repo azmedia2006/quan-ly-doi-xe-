@@ -73,19 +73,28 @@ export interface TripSchedule {
   vehicle_plate?: string;
   vehicle_model?: string;
   vehicle_type_display?: string;
+  vehicle_payload_capacity?: number;
   driver: number;
   driver_name?: string;
   driver_phone?: string;
   driver_license?: string;
+  customer_name?: string;
   origin: string;
   destination: string;
-  route_details?: string; // // NEW: Lộ trình dự kiến
-  cargo_or_passenger_info: string; // // UPDATE: Hàng hóa / Hành khách
+  route_details?: string;
+  cargo_or_passenger_info: string;
   cargo_weight: number;
   departure_time: string;
   estimated_arrival?: string;
   actual_arrival?: string;
   distance_km: number;
+  revenue?: number;
+  estimated_cost?: number;
+  gross_profit?: number;
+  trip_step?: 'ASSIGNED' | 'LOADED' | 'EN_ROUTE' | 'ARRIVED' | 'SIGNED';
+  trip_step_display?: string;
+  start_odometer?: number;
+  end_odometer?: number;
   status: 'PLANNED' | 'DISPATCHED' | 'COMPLETED' | 'CANCELLED';
   status_display?: string;
   notes?: string;
@@ -142,6 +151,7 @@ export interface Incident {
   incident_code: string;
   vehicle: number;
   vehicle_plate?: string;
+  vehicle_model?: string;
   driver?: number;
   driver_name?: string;
   incident_date: string;
@@ -149,8 +159,17 @@ export interface Incident {
   severity: 'LOW' | 'MEDIUM' | 'HIGH';
   severity_display?: string;
   description: string;
+  insurance_company?: string;
+  insurance_policy_number?: string;
   insurance_claim_amount: number;
-  status: 'REPORTED' | 'PROCESSING' | 'RESOLVED';
+  deductible_amount?: number;
+  claim_percentage?: number;
+  claim_step?: 'RECEIVE' | 'SURVEY' | 'APPROVE' | 'DISBURSED';
+  claim_step_display?: string;
+  evidence_images?: string;
+  police_report_number?: string;
+  needs_towing?: boolean;
+  status: 'REPORTED' | 'PROCESSING' | 'INSURANCE_PENDING' | 'RESOLVED';
   status_display?: string;
 }
 
