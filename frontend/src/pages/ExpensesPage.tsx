@@ -19,7 +19,9 @@ export const ExpensesPage: React.FC = () => {
  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
  const [drivers, setDrivers] = useState<Driver[]>([]);
  const [isModalOpen, setIsModalOpen] = useState(false);
- const [search, setSearch] = useState(''); // NEW
+  const [searchParams, setSearchParams] = useSearchParams();
+  const lookupParam = searchParams.get('lookup') || searchParams.get('q') || '';
+  const [search, setSearch] = useState(lookupParam); // NEW
  const [filter, setFilter] = useState<ExpenseFilter>('ALL'); // NEW
  const [editingExpense, setEditingExpense] = useState<Expense | null>(null); // NEW
  const [selectedExpenseForReceipt, setSelectedExpenseForReceipt] = useState<Expense | null>(null); // NEW: Receipt viewer
@@ -50,7 +52,20 @@ export const ExpensesPage: React.FC = () => {
  api.get('/vehicles/'),
  api.get('/drivers/'),
  ]);
- setExpenses(eRes.data.results || eRes.data || []);
+      const fetchedExpenses: Expense[] = eRes.data.results || eRes.data || [];
+      setExpenses(fetchedExpenses);
+      if (lookupParam) {
+        const q = lookupParam.trim().toLowerCase();
+        const matched = fetchedExpenses.find(x => 
+          (x.invoice_number || '').trim().toLowerCase() === q ||
+          (x.invoice_number || '').trim().toLowerCase().includes(q) ||
+          (`hđ-${x.id}`).toLowerCase() === q ||
+          (x.vehicle_plate || '').trim().toLowerCase() === q
+        );
+        if (matched) {
+          setSelectedExpenseForReceipt(matched);
+        }
+      }
  const vList = vRes.data.results || vRes.data || [];
  const dList = dRes.data.results || dRes.data || [];
  setVehicles(vList);
@@ -62,7 +77,15 @@ export const ExpensesPage: React.FC = () => {
  }
  };
 
- useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, [lookupParam]);
+
+  useEffect(() => {
+    if (lookupParam) {
+      setSearch(lookupParam);
+    }
+  }, [lookupParam]);
 
  // NEW: Reset form
  const resetForm = () => {
@@ -547,7 +570,7 @@ export const ExpensesPage: React.FC = () => {
                   <div className="text-left sm:text-right shrink-0 bg-slate-50 p-2 sm:p-2.5 rounded-xl border border-slate-100 text-[11px] space-y-0.5">
                     <p className="font-bold text-blue-900">Mẫu số: 01GTKT0/001</p>
                     <p className="font-mono text-slate-600">Ký hiệu (Series): <strong className="text-slate-900">1C26TBB</strong></p>
-                    <p className="font-mono text-slate-600">Số HĐ: <strong className="text-rose-600 text-xs font-black">{e.invoice_number || '0088992'}</strong></p>
+                    <p className="font-mono text-slate-600">Số HĐ: <strong className="text-rose-600 text-xs font-black">{e.invoice_number || `HĐ-${e.id.toString().padStart(5, '0')}`}</strong></p>
                     <p className="text-[10px] text-slate-500">Ngày lập: {formattedDate} 14:15:30</p>
                   </div>
                 </div>
@@ -690,15 +713,21 @@ export const ExpensesPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-bold text-slate-600">Tra cứu hóa đơn điện tử trực tuyến:</p>
-                      <a
-                        href={`${window.location.origin}/expenses?lookup=${encodeURIComponent(e.invoice_number || '0088992')}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono text-blue-600 underline hover:text-blue-700 break-all"
-                      >
-                        {window.location.origin}/expenses?lookup={e.invoice_number || '0088992'}
-                      </a>
-                      <p>Mã tra cứu bí mật: <strong>A89K-X92D-PL90</strong></p>
+                      {(() => {
+                        const invCode = e.invoice_number || `HĐ-${e.id.toString().padStart(5, '0')}`;
+                        const lookupUrl = `${window.location.origin}/expenses?lookup=${encodeURIComponent(invCode)}`;
+                        return (
+                          <a
+                            href={lookupUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-mono text-blue-600 underline hover:text-blue-700 break-all font-semibold"
+                          >
+                            {lookupUrl}
+                          </a>
+                        );
+                      })()}
+                      <p>Mã tra cứu bí mật: <strong>{`SEC-${(e.invoice_number || 'HD').replace(/[^a-zA-Z0-9]/g, '')}-${e.id || '01'}`}</strong></p>
                     </div>
                   </div>
                   <div className="text-right">
