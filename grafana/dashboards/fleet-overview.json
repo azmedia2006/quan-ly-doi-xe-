@@ -1,101 +1,411 @@
 {
-  "annotations": { "list": [] },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 100,
-      "title": "Hạ tầng Container (cAdvisor)",
+      "title": "Hạ tầng Hệ thống & Container (cAdvisor)",
       "type": "row"
     },
     {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
       "id": 1,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
-      "title": "Container CPU Usage",
-      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(container_cpu_usage_seconds_total{image!=\"\"}[1m])) by (name)",
-          "legendFormat": "{{name}}"
+          "datasource": "Prometheus",
+          "editorMode": "code",
+          "expr": "sum(rate(container_cpu_usage_seconds_total[1m])) by (id) > 0.001",
+          "legendFormat": "{{id}}",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "System CPU Usage by Service Slice",
+      "type": "timeseries"
     },
     {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
       "id": 2,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
-      "title": "Container Memory Usage",
-      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
       "targets": [
         {
-          "expr": "container_memory_usage_bytes{image!=\"\"}",
-          "legendFormat": "{{name}}"
+          "datasource": "Prometheus",
+          "editorMode": "code",
+          "expr": "container_memory_working_set_bytes{id=\"/\"} or container_memory_working_set_bytes > 0",
+          "legendFormat": "Host / System Root",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "System Memory Working Set (RAM Usage)",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
-      "id": 101,
-      "title": "Fleet Web App & Nginx Metrics",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 200,
+      "title": "Fleet Web App & Nginx Gateway Metrics",
       "type": "row"
     },
     {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
       "id": 3,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
-      "title": "Fleet App - HTTP Requests Rate",
-      "type": "timeseries",
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m])) by (status, route)",
-          "legendFormat": "{{route}} - {{status}}"
+          "datasource": "Prometheus",
+          "editorMode": "code",
+          "expr": "sum(rate(django_http_requests_before_middlewares_total[1m])) or rate(nginx_http_requests_total[1m])",
+          "legendFormat": "HTTP Requests Rate",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Fleet Backend & Nginx HTTP Request Rate",
+      "type": "timeseries"
     },
     {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
       "id": 4,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
-      "title": "Nginx Active Connections",
-      "type": "timeseries",
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
       "targets": [
         {
+          "datasource": "Prometheus",
+          "editorMode": "code",
           "expr": "nginx_connections_active",
-          "legendFormat": "Active Connections"
+          "legendFormat": "Active Connections",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Nginx Gateway Active Connections",
+      "type": "gauge"
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
-      "id": 102,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 300,
       "title": "PostgreSQL Database Metrics",
       "type": "row"
     },
     {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
       "id": 5,
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 19 },
-      "title": "PostgreSQL Active Connections",
-      "type": "timeseries",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
       "targets": [
         {
+          "datasource": "Prometheus",
+          "editorMode": "code",
           "expr": "pg_stat_database_numbackends{datname=\"fleetdb\"}",
-          "legendFormat": "Connections - fleetdb"
+          "legendFormat": "Connections",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "PostgreSQL Active Connections (fleetdb)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "editorMode": "code",
+          "expr": "pg_database_size_bytes{datname=\"fleetdb\"}",
+          "legendFormat": "Database Size",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Fleet Database Disk Size (PostgreSQL 16)",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 38,
-  "style": "dark",
-  "tags": ["fleet", "monitoring"],
-  "time": { "from": "now-15m", "to": "now" },
+  "schemaVersion": 39,
+  "tags": [
+    "fleet",
+    "docker",
+    "production",
+    "ictu"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "Fleet Management Monitoring Dashboard",
-  "uid": "fleet-overview"
+  "uid": "fleet-overview",
+  "version": 3
 }

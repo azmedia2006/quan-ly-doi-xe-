@@ -300,7 +300,7 @@ export const SettingsPage: React.FC = () => {
  <div className="space-y-3 text-xs">
  {[
  { name: 'pgAdmin 4 (PostgreSQL GUI)', sub: 'Tài khoản: admin@fleet.com', href: '/pgadmin/', color: 'bg-blue-600 hover:bg-blue-500', label: 'Mở pgAdmin' },
- { name: 'Grafana Monitoring & Logs', sub: 'Dashboard Metrics & LogQL Loki', href: '/grafana/explore', color: 'bg-purple-600 hover:bg-purple-500', label: 'Mở Grafana' },
+ { name: 'Grafana Monitoring & Logs', sub: 'Dashboard Metrics & LogQL Loki', href: `${window.location.protocol}//${window.location.hostname}:3001`, color: 'bg-purple-600 hover:bg-purple-500', label: 'Mở Grafana' },
  { name: 'Prometheus Web UI', sub: 'Thu thập chỉ số container, app & database', href: '/prometheus/', color: 'bg-slate-800 hover:bg-slate-700', label: 'Mở Prometheus' },
  { name: 'Swagger OpenAPI 3.0', sub: 'Tài liệu tương tác REST API', href: '/api/docs/', color: 'bg-emerald-600 hover:bg-emerald-500', label: 'Tài liệu API' },
  ].map((svc, i) => (

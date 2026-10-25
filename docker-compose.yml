@@ -31,6 +31,7 @@ services:
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
       PGADMIN_CONFIG_WTF_CSRF_ENABLED: 'False'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
@@ -121,8 +122,6 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=https://thi.azmedia247.com/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_AUTH_ANONYMOUS_ENABLED=false
     volumes:
       - grafana_data:/var/lib/grafana
@@ -137,6 +136,9 @@ services:
   # 8. cAdvisor (Container Resource Monitoring)
   fleet-cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=5s
     container_name: fleet-cadvisor
     restart: unless-stopped
     volumes:
@@ -144,7 +146,11 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
     networks:
       - monitoring-network
 
