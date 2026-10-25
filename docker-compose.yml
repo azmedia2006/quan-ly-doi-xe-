@@ -28,6 +28,9 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@fleet.com
       PGADMIN_DEFAULT_PASSWORD: FleetAdmin2026!Secure
       PGADMIN_LISTEN_PORT: 80
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      PGADMIN_CONFIG_WTF_CSRF_ENABLED: 'False'
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
