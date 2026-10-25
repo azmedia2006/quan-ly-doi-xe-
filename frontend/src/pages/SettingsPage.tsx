@@ -184,9 +184,16 @@ export const SettingsPage: React.FC = () => {
  const [testReceiverEmail, setTestReceiverEmail] = useState('admin@company.vn');
 
  const handleRoleSwitch = async (targetRole: UserRole) => {
- await switchRole(targetRole);
- success(`Đã chuyển đổi môi trường sang: ${DEMO_CREDENTIALS[targetRole]?.label || targetRole}`);
- };
+    if (user?.role !== 'ADMIN') {
+      return;
+    }
+    try {
+      await switchRole(targetRole);
+      success(`Đã chuyển đổi môi trường sang: ${DEMO_CREDENTIALS[targetRole]?.label || targetRole}`);
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
 
  const filteredAuditLogs = auditLogs.filter(log => {
  const matchSearch = !auditSearch || log.action.toLowerCase().includes(auditSearch.toLowerCase()) || log.detail.toLowerCase().includes(auditSearch.toLowerCase()) || log.user.includes(auditSearch);
@@ -254,33 +261,40 @@ export const SettingsPage: React.FC = () => {
  {/* ========== TAB: TỔNG QUAN (GIỮ NGUYÊN NỘI DUNG CŨ) ========== */}
  {activeTab === 'general' && (
  <div className="space-y-4 sm:space-y-6">
- {/* RBAC Simulation (GIỮ NGUYÊN) */}
- <div className={cardCls}>
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
- <div>
- <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
- <UserCheck className="w-4 h-4 text-blue-500" /> Chuyển Đổi Môi Trường Vai Trò (RBAC Simulation)
- </h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Dành riêng cho Quản trị viên và Giảng viên chấm bài kiểm thử quyền hạn.</p>
- </div>
- <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 shrink-0">Hiện tại: {user?.role_display}</span>
- </div>
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
- {(['ADMIN', 'DISPATCHER', 'DRIVER', 'MECHANIC', 'ACCOUNTANT'] as UserRole[]).map(r => {
- const isCurrent = user?.role === r;
- const cred = DEMO_CREDENTIALS[r];
- return (
- <button key={r} onClick={() => handleRoleSwitch(r)} className={`p-3 rounded-2xl text-left border transition-all ${isCurrent ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/30' : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300'}`}>
- <p className="text-xs font-bold truncate">{r === 'ADMIN' ? ' Admin' : r === 'DISPATCHER' ? ' Điều Hành' : r === 'DRIVER' ? '‍️ Tài Xế' : r === 'MECHANIC' ? ' Kỹ Thuật' : ' Kế Toán'}</p>
- <p className="text-[10px] text-slate-400 mt-0.5 font-mono truncate">@{cred?.u}</p>
- </button>
- );
- })}
- </div>
- </div>
+ {/* RBAC Simulation - CHỈ ADMIN MỚI CÓ QUYỀN CHUYỂN ĐỔI MÔI TRƯỜNG */}
+        {user?.role === 'ADMIN' ? (
+          <div className={cardCls}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <UserCheck className="w-4 h-4 text-blue-500" /> Chuyển Đổi Môi Trường Vai Trò (RBAC Simulation)
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Dành riêng cho Quản trị viên (Admin) kiểm thử và mô phỏng giao diện quyền hạn.</p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 shrink-0">Hiện tại: {user?.role_display}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
+              {(['ADMIN', 'DISPATCHER', 'DRIVER', 'MECHANIC', 'ACCOUNTANT'] as UserRole[]).map(r => {
+                const isCurrent = user?.role === r;
+                const cred = DEMO_CREDENTIALS[r];
+                return (
+                  <button key={r} onClick={() => handleRoleSwitch(r)} className={`p-3 rounded-2xl text-left border transition-all ${isCurrent ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/30' : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300'}`}>
+                    <p className="text-xs font-bold truncate">{r === 'ADMIN' ? 'Admin' : r === 'DISPATCHER' ? 'Điều Hành' : r === 'DRIVER' ? 'Tài Xế' : r === 'MECHANIC' ? 'Kỹ Thuật' : 'Kế Toán'}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 font-mono truncate">@{cred?.u}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Bạn đang đăng nhập với vai trò <strong>{user?.role_display}</strong>. Chức năng mô phỏng chuyển đổi vai trò chỉ dành riêng cho tài khoản <strong>Quản trị viên (Admin)</strong>.</span>
+          </div>
+        )}
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
- {/* Hạ tầng dịch vụ (GIỮ NGUYÊN) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          {/* Hạ tầng dịch vụ (GIỮ NGUYÊN) */}
  <div className={cardCls}>
  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"><Server className="w-4 h-4 text-blue-500" /> Cổng Truy Cập Dịch Vụ Quản Trị</h3>
  <div className="space-y-3 text-xs">

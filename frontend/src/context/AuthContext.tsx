@@ -80,6 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchRole = async (targetRole: UserRole) => {
+    // SECURITY CHECK: Chỉ Quản trị viên (Admin) mới có quyền chuyển đổi môi trường sang vai trò khác để kiểm thử
+    if (user?.role !== 'ADMIN') {
+      throw new Error('Chỉ Quản trị viên (Admin) mới có quyền chuyển đổi môi trường vai trò.');
+    }
     const cred = DEMO_CREDENTIALS[targetRole] || DEMO_CREDENTIALS.ADMIN;
     await login(cred.u, cred.p);
   };
