@@ -134,8 +134,8 @@ Toàn bộ hệ sinh thái dịch vụ được điều phối thống nhất th
 | **Cài Đặt & Giám Sát (Settings)** | `https://thi.azmedia247.com/settings` | `443` | Cấu hình định mức, danh mục, SMTP, audit logs |
 | **Tài liệu Swagger / OpenAPI 3.0** | `https://thi.azmedia247.com/api/docs/` | `443` | Xem, tra cứu và test trực tiếp toàn bộ REST API |
 | **pgAdmin 4 (Quản trị Database)** | `https://thi.azmedia247.com/pgadmin/` | `443` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
-| **Grafana Monitoring Dashboard** | `http://180.93.114.74:3001` | `3001` | User: `admin` / Pass: `admin` |
-| **Prometheus Metrics Engine** | `http://180.93.114.74:9090` | `9090` | Engine thu thập metrics thời gian thực |
+| **Grafana Monitoring & Explore** | `https://thi.azmedia247.com/grafana/` hoặc `/grafana/explore` | `443` | Tự động đăng nhập Admin (Không cần mật khẩu) |
+| **Prometheus Metrics Engine** | `https://thi.azmedia247.com/prometheus/` | `443` | Giao diện PromQL & Status Targets |
 | **Loki Centralized Logging** | `http://180.93.114.74:3100` | `3100` | Cổng lưu trữ và truy vấn LogQL |
 
 ---
@@ -206,7 +206,7 @@ Hệ thống đã nạp sẵn dữ liệu mẫu thực tế. Có thể đăng nh
 ## 7. Hướng Dẫn Giám Sát & Quản Trị Hệ Thống (DevOps)
 
 ### 7.1. Truy vấn Log tập trung Loki bằng LogQL (Yêu cầu đề tài: ít nhất 2–3 query)
-Truy cập **Grafana Explore** (`https://thi.azmedia247.com:3001/explore`), chọn data source **Loki**:
+Truy cập **Grafana Explore** trực tiếp tại: **`https://thi.azmedia247.com/grafana/explore`** (Đã kích hoạt tự động đăng nhập Admin và tích hợp sẵn Data Source **Loki** & **Prometheus**):
 
 - **Query 1: Xem toàn bộ Access Log thời gian thực của Nginx Reverse Proxy:**
   ```logql
@@ -229,10 +229,10 @@ Truy cập **Grafana Explore** (`https://thi.azmedia247.com:3001/explore`), ch�
   ```
 
 ### 7.2. Giám sát Prometheus & Bảng điều khiển Grafana Dashboard
-- **Prometheus UI (`https://thi.azmedia247.com:9090`):**
+- **Prometheus UI (`https://thi.azmedia247.com/prometheus/`):**
   + Kiểm tra trạng thái 5 targets cào chỉ số tại menu `Status` -> `Targets`: Tất cả đều ở trạng thái **UP (Healthy)**.
   + Thử nghiệm truy vấn PromQL: `rate(django_http_requests_total_by_view_transport_method_total[5m])`.
-- **Grafana Dashboard (`https://thi.azmedia247.com:3001`):**
+- **Grafana Dashboard (`https://thi.azmedia247.com/grafana/`):**
   + Bảng điều khiển tài nguyên container: CPU Usage %, Memory RAM (MB), Network In/Out traffic qua cAdvisor.
   + Bảng điều khiển Database: Active Connections, Transaction Commit/Rollback, Deadlocks qua PostgreSQL Exporter.
   + Bảng điều khiển Web Server: Request/sec, HTTP 2xx/4xx/5xx qua Nginx Exporter.
