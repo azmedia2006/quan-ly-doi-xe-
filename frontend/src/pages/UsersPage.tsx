@@ -136,7 +136,20 @@ export const UsersPage: React.FC = () => {
  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-1 w-full flex-wrap">
  <button onClick={() => handleEdit(u)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold"><Pencil className="w-3 h-3" /> Sửa</button>
  <button onClick={() => { setResetPwModal(u); setNewPassword('Admin@123'); }} className="px-2 py-1 text-[11px] text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg flex items-center gap-1 font-semibold"><KeyRound className="w-3 h-3" /> Mật khẩu</button>
- <button onClick={() => handleToggleLock(u)} className={`px-2 py-1 text-[11px] rounded-lg flex items-center gap-1 font-semibold ${u.is_active ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/40' : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'}`}>{u.is_active ? <><Lock className="w-3 h-3" /> Khóa</> : <><Unlock className="w-3 h-3" /> Mở</>}</button>
+ <button
+                onClick={() => handleToggleLock(u)}
+                disabled={u.role === 'ADMIN' || u.role === 'SUPERADMIN'}
+                className={`px-2 py-1 text-[11px] rounded-lg flex items-center gap-1 font-semibold ${
+                  u.role === 'ADMIN' || u.role === 'SUPERADMIN'
+                    ? 'text-slate-300 dark:text-slate-700 cursor-not-allowed opacity-50'
+                    : u.is_active
+                    ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/40'
+                    : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                }`}
+                title={u.role === 'ADMIN' || u.role === 'SUPERADMIN' ? 'Tài khoản Admin không thể khóa' : u.is_active ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+              >
+                {u.is_active ? <><Lock className="w-3 h-3" /> Khóa</> : <><Unlock className="w-3 h-3" /> Mở</>}
+              </button>
  <button onClick={() => handleDelete(u.id)} disabled={isSelf} className={`px-2 py-1 text-[11px] rounded-lg flex items-center gap-1 font-semibold ${isSelf ? 'text-slate-400 cursor-not-allowed opacity-50' : 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'}`} title={isSelf ? 'Không thể xóa chính mình' : 'Xóa'}><Trash2 className="w-3 h-3" /> Xóa</button>
  </div>
  </div>);
