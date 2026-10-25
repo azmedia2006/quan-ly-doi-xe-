@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, Truck, Users, CalendarDays, Wrench, Fuel,
-  AlertTriangle, Bell, Settings, X, ShieldCheck, MapPin, DollarSign
+  AlertTriangle, Bell, Settings, X, ShieldCheck, MapPin, DollarSign, UserCog
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
@@ -105,6 +105,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, onC
           name: 'Trung tâm Thông báo',
           path: '/notifications',
           icon: <Bell className="w-5 h-5 shrink-0" />,
+        },
+        {
+          name: 'Quản lý Tài khoản',
+          path: '/users',
+          icon: <UserCog className="w-5 h-5 shrink-0" />,
+          allowedRoles: ['ADMIN', 'SUPERADMIN'],
+          badge: 'Admin',
         },
         {
           name: 'Cài đặt & Giám sát',
