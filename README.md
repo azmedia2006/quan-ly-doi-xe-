@@ -154,58 +154,52 @@ Hệ thống đã nạp sẵn dữ liệu mẫu thực tế. Có thể đăng nh
 
 ---
 
-## 6. Chi Tiết 6 Phân Hệ Nghiệp Vụ Cốt Lõi
+## 6. Chi Tiết Các Phân Hệ Nghiệp Vụ Cốt Lõi (Nâng Cấp Mới Nhất)
 
-### 6.1. Quản lý Phương Tiện (Vehicles)
-- Biển kiểm soát, hãng sản xuất, model xe.
-- Phân loại chuẩn 5 nhóm xe: Xe tải (`TRUCK`), Xe khách (`PASSENGER`), Xe con 4–7 chỗ (`CAR`), Xe đầu kéo (`CONTAINER`), Xe van (`VAN`).
-- Thông số kỹ thuật: Tải trọng thiết kế (tấn), **năm sản xuất**, **định mức tiêu hao nhiên liệu lý thuyết (L/100km)**, số ODO hiện tại, hạn đăng kiểm và hạn bảo hiểm.
-- Quản lý trạng thái xe: Đang rảnh / Sẵn sàng (`AVAILABLE`), Đang chạy tuyến (`ON_TRIP`), Đang bảo dưỡng (`MAINTENANCE`), Đang sửa chữa (`REPAIR`), Ngưng hoạt động (`INACTIVE`).
+### 6.1. Quản lý Xe & Phương tiện (Vehicles)
+- **Hàng Thống kê Mini (Quick Stats Cards):** Tổng số xe, xe đang vận hành, xe sẵn sàng, xe đang bảo dưỡng.
+- **Bộ lọc nhanh (Filter Chips):** Sẵn sàng, Đang chạy, Bảo dưỡng, Sắp hết hạn đăng kiểm.
+- **Cảnh báo thông minh:** Tự động cảnh báo hạn đăng kiểm dưới 30 ngày kèm icon cảnh báo.
+- **Ràng buộc an toàn:** Vô hiệu hóa nút xóa xe khi xe đang thực hiện chuyến đi.
 
-### 6.2. Quản lý Hồ sơ Tài xế (Drivers)
-- Thông tin nhân sự: Mã tài xế, họ tên, số điện thoại, CCCD/CMND, **ngày sinh**, **địa chỉ thường trú**, thâm niên kinh nghiệm, điểm đánh giá sao (rating).
-- Giấy phép lái xe: Hạng bằng lái (B1, B2, C, D, E, FC), **ngày cấp bằng**, **ngày hết hạn bằng** kèm cảnh báo tự động khi bằng sắp hoặc đã quá hạn.
-- Chuẩn hóa 3 trạng thái hoạt động: **Đang rảnh (`AVAILABLE`)**, **Đang lái xe (`ON_TRIP`)**, **Nghỉ phép (`ON_LEAVE`)**.
+### 6.2. Quản lý Tài xế (Drivers)
+- **Quản lý thông tin & Hạng bằng:** Quản lý bằng lái (B1, B2, C, D, E, FC), kinh nghiệm, CCCD, số điện thoại bấm gọi trực tiếp (`tel:`).
+- **Trạng thái & Lịch sử chuyến:** Trạng thái Đang rảnh / Đang lái / Nghỉ phép; cảnh báo bằng lái quá hạn hoặc sắp hết hạn.
+- **Ràng buộc nghiệp vụ:** Không cho phép gán tài xế bị quá hạn bằng lái hoặc đang trong chuyến đi khác.
 
 ### 6.3. Lập Lệnh Điều Xe & Chuyến Đi (Dispatch & Trips)
-- Gán đồng bộ: Xe + Tài xế + Điểm xuất phát + Điểm đến + **Lộ trình dự kiến** (`route_details`) + **Thông tin hàng hóa / hành khách** (`cargo_or_passenger_info`).
-- **Ràng buộc nghiệp vụ tự động (Strict Constraints):**
-  + Chỉ cho phép chọn các xe và tài xế đang ở trạng thái **Đang rảnh (`AVAILABLE`)**.
-  + **Chống trùng lịch:** Kiểm tra đối soát không để xe hoặc tài xế có chuyến đi nào khác đang ở trạng thái `PLANNED` hoặc `DISPATCHED`.
-  + **Tự động đổi trạng thái:** Khi tạo lệnh xuất bến, hệ thống tự động cập nhật Xe và Tài xế sang `ON_TRIP`. Khi hoàn thành (`COMPLETED`), hủy bỏ (`CANCELLED`) hoặc xóa lệnh, trạng thái tự động hoàn lại thành `AVAILABLE`.
+- **Mã chuyến chuẩn hóa:** Chuẩn hóa format `DISPATCH-2026-001`, `DISPATCH-2026-002`...
+- **Thanh tiến trình 5 bước (Trip Stepper):** [Gán xe] ➔ [Đã bốc hàng] ➔ [Đang trên đường] ➔ [Đã đến nơi] ➔ [Hoàn tất ký nhận].
+- **Tính toán tài chính (Trip P&L):** Doanh thu cước vận chuyển, chi phí ước tính, lợi nhuận gộp tạm tính và tỷ lệ tải trọng an toàn.
+- **Live Tracking & Hoàn tất chuyến:** Hỗ trợ xem lộ trình trực quan và hoàn tất chuyến tự động giải phóng xe + tài xế về trạng thái Sẵn sàng.
 
-### 6.4. Quản lý Chi Phí & Xăng Dầu (Expenses)
-- Chuẩn hóa 4 nhóm chi phí bắt buộc:
-  1. `FUEL`: Hóa đơn xăng / dầu diesel (kèm số lít, đơn giá xăng dầu VNĐ/Lít và tự động tính tổng tiền).
-  2. `TOLL`: Phí cầu đường (Trạm thu phí BOT, tài khoản trừ tiền tự động VETC/ePass).
-  3. `REPAIR`: Chi phí sửa chữa & thay thế phụ tùng bảo dưỡng.
-  4. `FINE`: Vé phạt vi phạm giao thông / biên bản CSGT.
-  5. `OTHER`: Chi phí bến bãi, rửa xe, lưu kho.
-- Lưu trữ số hóa đơn GTGT / mã biên lai và ghi chú diễn giải.
+### 6.4. Quản Lý Chi Phí & Xăng Dầu (Expenses & e-Invoice)
+- **Hóa đơn điện tử chuẩn Doanh nghiệp Việt Nam:** Thay thế ảnh biên lai bằng mẫu hóa đơn GTGT điện tử chuẩn Thuế của **VETC** và **Petrolimex**.
+- **Bóc tách tài chính & Dấu mộc số:** Phân tách tiền trước thuế, thuế suất GTGT 10%, số tiền viết bằng chữ tự động, con dấu mộc đỏ Vector CSS xoay nghiêng -6 độ có chứng thư số Viettel-CA hợp lệ.
+- **Tra cứu hóa đơn trực tuyến tự động:** Mã QR Code và liên kết tra cứu tự động nhận diện Domain hiện tại (`https://thi.azmedia247.com/expenses?lookup={MãHĐ}`) tự động lọc và mở đúng hóa đơn khi click.
+- **Xuất / In ấn độc lập:** Nút in tài liệu độc lập chuẩn khổ giấy **A4 Portrait**, không bị văng sang trang 2 hay méo lệch con dấu.
+- **Quy trình Phê duyệt:** Kế toán / Admin duyệt chi trực tiếp trên hóa đơn hoặc nhập lý do từ chối.
 
-### 6.5. Báo Cáo & Thống Kê Chuyên Sâu (Reports & Analytics)
-- Theo dõi các chỉ số KPI: Tỷ lệ hiệu suất khai thác đội xe (Fleet Utilization Rate %), Tổng chi phí vận hành, Định mức nhiên liệu thực tế, Tỷ lệ giao hàng đúng giờ (On-Time Delivery Rate %).
-- Biểu đồ Recharts so sánh biến động chi phí xăng dầu & bảo dưỡng qua các tháng; Biểu đồ tròn cơ cấu chi phí.
-- **Tính năng Xuất Báo Cáo CSV chuẩn:** Cơ chế HTML5 Blob Object tương thích 100% Android, iOS Safari và Desktop PC, tự động đính kèm UTF-8 BOM chống lỗi font chữ Tiếng Việt khi mở bằng Microsoft Excel hoặc Google Sheets.
+### 6.5. Bảo Dưỡng & Sửa Chữa (Maintenance)
+- **Theo dõi ODO & Chu kỳ:** Cảnh báo mốc bảo dưỡng định kỳ 5.000km, 10.000km hoặc 3-6 tháng.
+- **Chi tiết phụ tùng & Vật tư:** Danh mục vật tư thay thế (dầu nhớt động cơ, lọc gió, má phanh...).
+- **Đồng bộ trạng thái:** Khi tạo phiếu bảo dưỡng, xe tự động khóa trạng thái *"Đang bảo dưỡng"*; khi bấm *"Nghiệm thu / Hoàn tất"*, xe tự động mở về *"Sẵn sàng"*.
 
-### 6.7. Quản Lý Tài Khoản & Phân Quyền Người Dùng (User Management - Admin Only)
-- **Module độc quyền cho Quản trị viên (Admin):** Truy cập tại menu HỆ THỐNG -> Quản lý Tài khoản (route: `/users`).
-- **Quản lý danh sách nhân sự:** Họ tên, Username, Email, Số điện thoại, Vai trò phân quyền, Thời gian đăng nhập lần cuối (Last login).
-- **Hàng Thống kê Mini & Filter Chips:** Tổng số người dùng, Đang hoạt động, Đang bị khóa, Phân bổ tỷ lệ vai trò (Admin / Điều phối / Kế toán / Tài xế).
-- **Tính năng tác vụ:**
-  - Tạo mới tài khoản nhân sự với vai trò và mật khẩu tạm thời.
-  - Sửa thông tin cá nhân và chuyển đổi vai trò (Role Assignment).
-  - Khóa / Mở khóa tài khoản (toggle active status).
-  - Cấp lại mật khẩu nhanh (Reset Password).
-  - **Ràng buộc an toàn cốt lõi:** Tài khoản Admin hệ thống được bảo vệ vĩnh viễn ở cả API Backend và UI Frontend: **Tuyệt đối không thể bị khóa hoặc xóa**, tránh rủi ro mất quyền kiểm soát máy chủ.
+### 6.6. Sự Cố & Bảo Hiểm (Incidents & Claims)
+- **Upload nhiều ảnh hiện trường & biên bản:** Hỗ trợ tải nhiều ảnh cùng lúc từ Camera điện thoại hoặc thư viện ảnh, có thumbnail đánh số thứ tự và nút xóa nhanh từng ảnh.
+- **Tiến trình bồi thường 4 bước (Claims Stepper):** [Tiếp nhận] ➔ [Giám định hiện trường] ➔ [Duyệt giá đền bù] ➔ [Đã quyết toán].
+- **Cơ cấu dòng tiền bồi thường:** Bóc tách số tiền bảo hiểm chi trả, khấu trừ tài xế/doanh nghiệp tự chịu, tỷ lệ % chi trả.
+- **Phím tắt liên thông:** Nút tạo nhanh phiếu sửa chữa sang module Bảo Dưỡng và ghi nhận chi phí sang module Expenses.
 
-### 6.6. Cài Đặt & Giám Sát Nâng Cao (Settings & Monitoring - 6 Tabs)
-1. **Tổng quan:** Truy cập cổng pgAdmin, Grafana, Prometheus, Swagger và xem chính sách Hardening.
-2. **Định mức & Cảnh báo:** Thiết lập số ngày cảnh báo trước hạn (đăng kiểm, bảo hiểm, GPLX từ 15-30 ngày); Chu kỳ bảo dưỡng theo ODO (5.000km - 20.000km) hoặc thời gian (3-12 tháng); Toggle bật/tắt chặn gán chuyến quá hạn.
-3. **Danh mục Dùng chung:** Loại xe & tải trọng, Hạng bằng lái, Loại chi phí, Hạng mục bảo dưỡng định kỳ.
-4. **Phân quyền RBAC:** Ma trận kiểm soát quyền hạn (Permissions Matrix) giữa các vai trò.
-5. **Tích hợp API:** Google Maps API Key, Webhook Telegram, và **Cấu hình Email SMTP đầy đủ 8 trường** (Host, Port, Encryption, Username, App Password, Sender Name, From Email, Test Receiver).
-6. **Nhật ký Audit Logs:** Lưu vết thời gian, tài khoản, vai trò, hành động, chi tiết thay đổi và IP; Tìm kiếm từ khóa và xuất lịch sử ra file CSV.
+### 6.7. Quản Trị Người Dùng & Phân Quyền RBAC (/users)
+- **Trang Quản lý Tài khoản chuyên biệt:** CRUD người dùng, cấp phát tài khoản, đặt lại mật khẩu, khóa/mở khóa tài khoản.
+- **Bảo vệ tài khoản Quản trị viên:** Tài khoản Admin chính được bảo vệ ở cả Backend và Frontend (không bao giờ bị khóa hoặc xóa).
+- **Bảo mật chuyển đổi môi trường (RBAC Simulation):** Chỉ tài khoản Admin mới có quyền mô phỏng chuyển đổi vai trò kiểm thử; các vai trò khác bị khóa và ẩn tính năng này.
+
+### 6.8. Trung Tâm Cài Đặt & Giám Sát (Settings & Audit Logs)
+- **Đồng bộ URL từng Tab (`/settings/:tab`):** Hỗ trợ link trực tiếp `/settings/tong-quan`, `/settings/dinh-muc`, `/settings/danh-muc`, `/settings/phan-quyen`, `/settings/tich-hop`, `/settings/nhat-ky`. F5 tải lại trang vẫn giữ nguyên tab đang chọn.
+- **Nhật ký Audit Log thời gian thực:** Lưu vết tự động tất cả các thao tác (tạo chuyến, duyệt chi, sửa xe, đổi quyền...) qua Django Signals và hỗ trợ xuất CSV.
+- **Thông báo tự động (Notifications):** Hệ thống thông báo thời gian thực tự động kích hoạt khi có lệnh điều xe mới, phát sinh sự cố khẩn cấp hoặc đưa xe vào bảo dưỡng.
 
 ---
 
