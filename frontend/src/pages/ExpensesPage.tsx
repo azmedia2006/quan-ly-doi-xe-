@@ -663,15 +663,16 @@ export const ExpensesPage: React.FC = () => {
                 </div>
 
                 {/* 4. Digital Signatures & Stamps */}
-                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200 text-center text-[11px]">
+                <div className="signatures-block grid grid-cols-2 gap-6 pt-4 border-t border-slate-200 text-center text-[11px]" style={{ pageBreakInside: 'avoid' }}>
                   {/* Left: Buyer */}
-                  <div className="space-y-1 flex flex-col items-center">
-                    <p className="font-bold text-slate-800 uppercase">Người mua hàng / Tài xế</p>
+                  <div className="space-y-1.5 flex flex-col items-center justify-start">
+                    <p className="font-bold text-slate-900 uppercase tracking-wide">Người mua hàng / Tài xế</p>
                     <p className="text-[10px] text-slate-400 italic">(Ký, ghi rõ họ tên)</p>
-                    <div className="py-2">
-                      <span className="font-cursive text-base font-bold text-blue-800 tracking-wider">
+                    <div className="h-20 flex flex-col items-center justify-center">
+                      <span className="text-base font-bold text-blue-900 font-serif italic tracking-wider">
                         {e.driver_name || 'Nguyễn Văn An'}
                       </span>
+                      <span className="text-[10px] text-slate-400 font-mono mt-1">Xác thực OTP SmartCA</span>
                     </div>
                     <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
                       <CheckCircle className="w-3 h-3" /> Đã xác nhận điện tử
@@ -679,23 +680,23 @@ export const ExpensesPage: React.FC = () => {
                   </div>
 
                   {/* Right: Seller with Round Stamp */}
-                  <div className="space-y-1 flex flex-col items-center">
-                    <p className="font-bold text-slate-800 uppercase">Đơn vị thu phí / Bán hàng</p>
+                  <div className="space-y-1.5 flex flex-col items-center justify-start">
+                    <p className="font-bold text-slate-900 uppercase tracking-wide">Đơn vị thu phí / Bán hàng</p>
                     <p className="text-[10px] text-slate-400 italic">(Ký điện tử & Đóng dấu)</p>
                     
-                    {/* Red Stamp Vector CSS */}
-                    <div className="my-1 w-28 h-28 rounded-full border-2 border-rose-600 text-rose-600 flex flex-col items-center justify-center p-1.5 text-center relative rotate-[-6deg] shadow-xs select-none">
-                      <div className="w-full h-full rounded-full border border-dashed border-rose-400 flex flex-col items-center justify-center p-1">
-                        <span className="text-[7.5px] font-black uppercase leading-tight">
+                    {/* Red Stamp SVG Vector - Perfect Circle, No Distort */}
+                    <div className="h-24 flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-full border-2 border-rose-600 bg-rose-50/20 text-rose-600 flex flex-col items-center justify-center p-1 text-center shadow-xs select-none">
+                        <span className="text-[7px] font-black uppercase tracking-tighter leading-tight px-1">
                           {isToll ? 'CÔNG TY CP GIAO THÔNG SỐ VETC' : 'CÔNG TY CP XĂNG DẦU PETROLIMEX'}
                         </span>
-                        <div className="my-0.5 px-1 py-0.2 text-[8px] font-black bg-rose-600 text-white rounded">
+                        <div className="my-0.5 px-1 py-0.5 text-[7.5px] font-black bg-rose-600 text-white rounded-sm tracking-wider">
                           ĐÃ KÝ ĐIỆN TỬ
                         </div>
-                        <span className="text-[7px] font-mono leading-none">
+                        <span className="text-[7.5px] font-mono font-bold leading-tight">
                           {formattedDate}
                         </span>
-                        <span className="text-[6.5px] font-mono opacity-80">MST: 0108223399</span>
+                        <span className="text-[6.5px] font-mono opacity-80 leading-none">MST: 0108223399</span>
                       </div>
                     </div>
 
@@ -782,22 +783,51 @@ export const ExpensesPage: React.FC = () => {
                             <meta name="viewport" content="width=device-width, initial-scale=1" />
                             <script src="https://cdn.tailwindcss.com"></script>
                             <style>
-                              @page { size: A4 portrait; margin: 12mm; }
-                              body { background: white; margin: 0; padding: 15px; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-                              #invoice-printable-area { border: 2px dashed #94a3b8; border-radius: 1rem; padding: 1.5rem; background: white; }
+                              @page {
+                                size: A4 portrait;
+                                margin: 8mm 10mm;
+                              }
+                              * {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                              }
+                              html, body {
+                                background: white !important;
+                                margin: 0;
+                                padding: 0;
+                                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                              }
+                              #invoice-printable-area {
+                                border: 2px dashed #94a3b8 !important;
+                                border-radius: 1rem !important;
+                                padding: 1.25rem 1.5rem !important;
+                                background: white !important;
+                                max-width: 100% !important;
+                                margin: 0 auto !important;
+                                page-break-inside: avoid !important;
+                              }
+                              .signatures-block {
+                                page-break-inside: avoid !important;
+                              }
                               @media print {
-                                body { padding: 0; }
-                                #invoice-printable-area { border: 2px dashed #94a3b8; box-shadow: none; }
+                                body {
+                                  padding: 0 !important;
+                                }
+                                #invoice-printable-area {
+                                  box-shadow: none !important;
+                                }
                               }
                             </style>
                           </head>
-                          <body>
-                            ${printContent.outerHTML}
+                          <body class="p-2 sm:p-4">
+                            <div class="max-w-2xl mx-auto">
+                              ${printContent.outerHTML}
+                            </div>
                             <script>
                               window.onload = function() {
                                 setTimeout(function() {
                                   window.print();
-                                  setTimeout(function() { window.close(); }, 500);
+                                  setTimeout(function() { window.close(); }, 600);
                                 }, 300);
                               };
                             </script>
