@@ -129,11 +129,11 @@ Toàn bộ hệ sinh thái dịch vụ được điều phối thống nhất th
 
 | Dịch vụ | Địa chỉ URL | Cổng | Thông tin đăng nhập / Chức năng |
 |:---|:---|:---:|:---|
-| **Website Quản Lý Đội Xe (SPA)** | `https://180.93.114.74` hoặc `http://180.93.114.74` | `443` / `80` | Đăng nhập tài khoản mẫu ở Mục 5 |
-| **Báo Cáo & Thống Kê (Reports)** | `https://180.93.114.74/reports` | `443` | Xem biểu đồ phân tích và xuất dữ liệu CSV |
-| **Cài Đặt & Giám Sát (Settings)** | `https://180.93.114.74/settings` | `443` | Cấu hình định mức, danh mục, SMTP, audit logs |
-| **Tài liệu Swagger / OpenAPI 3.0** | `https://180.93.114.74/api/docs/` | `443` | Xem, tra cứu và test trực tiếp toàn bộ REST API |
-| **pgAdmin 4 (Quản trị Database)** | `https://180.93.114.74/pgadmin/` | `443` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
+| **Website Quản Lý Đội Xe (SPA)** | `https://thi.azmedia247.com` hoặc `https://thi.azmedia247.com` | `443` / `80` | Đăng nhập tài khoản mẫu ở Mục 5 |
+| **Báo Cáo & Thống Kê (Reports)** | `https://thi.azmedia247.com/reports` | `443` | Xem biểu đồ phân tích và xuất dữ liệu CSV |
+| **Cài Đặt & Giám Sát (Settings)** | `https://thi.azmedia247.com/settings` | `443` | Cấu hình định mức, danh mục, SMTP, audit logs |
+| **Tài liệu Swagger / OpenAPI 3.0** | `https://thi.azmedia247.com/api/docs/` | `443` | Xem, tra cứu và test trực tiếp toàn bộ REST API |
+| **pgAdmin 4 (Quản trị Database)** | `https://thi.azmedia247.com/pgadmin/` | `443` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
 | **Grafana Monitoring Dashboard** | `http://180.93.114.74:3001` | `3001` | User: `admin` / Pass: `admin` |
 | **Prometheus Metrics Engine** | `http://180.93.114.74:9090` | `9090` | Engine thu thập metrics thời gian thực |
 | **Loki Centralized Logging** | `http://180.93.114.74:3100` | `3100` | Cổng lưu trữ và truy vấn LogQL |
@@ -188,6 +188,17 @@ Hệ thống đã nạp sẵn dữ liệu mẫu thực tế. Có thể đăng nh
 - Biểu đồ Recharts so sánh biến động chi phí xăng dầu & bảo dưỡng qua các tháng; Biểu đồ tròn cơ cấu chi phí.
 - **Tính năng Xuất Báo Cáo CSV chuẩn:** Cơ chế HTML5 Blob Object tương thích 100% Android, iOS Safari và Desktop PC, tự động đính kèm UTF-8 BOM chống lỗi font chữ Tiếng Việt khi mở bằng Microsoft Excel hoặc Google Sheets.
 
+### 6.7. Quản Lý Tài Khoản & Phân Quyền Người Dùng (User Management - Admin Only)
+- **Module độc quyền cho Quản trị viên (Admin):** Truy cập tại menu HỆ THỐNG -> Quản lý Tài khoản (route: `/users`).
+- **Quản lý danh sách nhân sự:** Họ tên, Username, Email, Số điện thoại, Vai trò phân quyền, Thời gian đăng nhập lần cuối (Last login).
+- **Hàng Thống kê Mini & Filter Chips:** Tổng số người dùng, Đang hoạt động, Đang bị khóa, Phân bổ tỷ lệ vai trò (Admin / Điều phối / Kế toán / Tài xế).
+- **Tính năng tác vụ:**
+  - Tạo mới tài khoản nhân sự với vai trò và mật khẩu tạm thời.
+  - Sửa thông tin cá nhân và chuyển đổi vai trò (Role Assignment).
+  - Khóa / Mở khóa tài khoản (toggle active status).
+  - Cấp lại mật khẩu nhanh (Reset Password).
+  - **Ràng buộc an toàn cốt lõi:** Tài khoản Admin hệ thống được bảo vệ vĩnh viễn ở cả API Backend và UI Frontend: **Tuyệt đối không thể bị khóa hoặc xóa**, tránh rủi ro mất quyền kiểm soát máy chủ.
+
 ### 6.6. Cài Đặt & Giám Sát Nâng Cao (Settings & Monitoring - 6 Tabs)
 1. **Tổng quan:** Truy cập cổng pgAdmin, Grafana, Prometheus, Swagger và xem chính sách Hardening.
 2. **Định mức & Cảnh báo:** Thiết lập số ngày cảnh báo trước hạn (đăng kiểm, bảo hiểm, GPLX từ 15-30 ngày); Chu kỳ bảo dưỡng theo ODO (5.000km - 20.000km) hoặc thời gian (3-12 tháng); Toggle bật/tắt chặn gán chuyến quá hạn.
@@ -201,7 +212,7 @@ Hệ thống đã nạp sẵn dữ liệu mẫu thực tế. Có thể đăng nh
 ## 7. Hướng Dẫn Giám Sát & Quản Trị Hệ Thống (DevOps)
 
 ### 7.1. Truy vấn Log tập trung Loki bằng LogQL (Yêu cầu đề tài: ít nhất 2–3 query)
-Truy cập **Grafana Explore** (`http://180.93.114.74:3001/explore`), chọn data source **Loki**:
+Truy cập **Grafana Explore** (`https://thi.azmedia247.com:3001/explore`), chọn data source **Loki**:
 
 - **Query 1: Xem toàn bộ Access Log thời gian thực của Nginx Reverse Proxy:**
   ```logql
@@ -224,22 +235,22 @@ Truy cập **Grafana Explore** (`http://180.93.114.74:3001/explore`), chọn dat
   ```
 
 ### 7.2. Giám sát Prometheus & Bảng điều khiển Grafana Dashboard
-- **Prometheus UI (`http://180.93.114.74:9090`):**
+- **Prometheus UI (`https://thi.azmedia247.com:9090`):**
   + Kiểm tra trạng thái 5 targets cào chỉ số tại menu `Status` -> `Targets`: Tất cả đều ở trạng thái **UP (Healthy)**.
   + Thử nghiệm truy vấn PromQL: `rate(django_http_requests_total_by_view_transport_method_total[5m])`.
-- **Grafana Dashboard (`http://180.93.114.74:3001`):**
+- **Grafana Dashboard (`https://thi.azmedia247.com:3001`):**
   + Bảng điều khiển tài nguyên container: CPU Usage %, Memory RAM (MB), Network In/Out traffic qua cAdvisor.
   + Bảng điều khiển Database: Active Connections, Transaction Commit/Rollback, Deadlocks qua PostgreSQL Exporter.
   + Bảng điều khiển Web Server: Request/sec, HTTP 2xx/4xx/5xx qua Nginx Exporter.
 
 ### 7.3. Quản trị Cơ sở dữ liệu với pgAdmin 4
-- Truy cập: `https://180.93.114.74/pgadmin/`
+- Truy cập: `https://thi.azmedia247.com/pgadmin/`
 - Đăng nhập: `admin@fleet.com` / `FleetAdmin2026!Secure`
 - Kết nối tới server: Host `fleet-postgres`, Port `5432`, Database `fleetdb`, User `fleet_user`, Password `FleetSecret2026!Secure`.
 - Hỗ trợ xem cấu trúc bảng, chạy SQL Query Tool và sao lưu (Backup / Restore) dữ liệu.
 
 ### 7.4. Tài liệu tương tác Swagger OpenAPI 3.0
-- Truy cập: `https://180.93.114.74/api/docs/`
+- Truy cập: `https://thi.azmedia247.com/api/docs/`
 - Tích hợp chuẩn OpenAPI 3.0 tự động sinh qua `drf-spectacular`.
 - Cho phép sinh viên và giảng viên bấm **"Try it out"** để test trực tiếp tất cả các endpoint CRUD của Đội xe, Tài xế, Chuyến đi, Chi phí ngay trên trình duyệt mà không cần cài đặt Postman.
 
@@ -318,8 +329,8 @@ docker exec fleet-backend python manage.py seed_db
 
 ## 10. Hướng Dẫn Xử Lý Sự Cố (Troubleshooting & FAQs)
 
-- **Hỏi: Truy cập HTTPS gặp cảnh báo "Kết nối của bạn không phải là riêng tư" (Your connection is not private)?**  
-  *Trả lời:* Do hệ thống sử dụng chứng chỉ SSL tự ký (Self-Signed) để phục vụ chấm điểm đồ án thực hành TKQT HTPM (tiêu chí số 3). Bạn chỉ cần bấm vào **"Nâng cao" (Advanced)** -> Chọn **"Tiếp tục truy cập (không an toàn)"** để vào website bình thường.
+- **Hỏi: Website có chứng chỉ SSL chính thức không?**  
+  *Trả lời:* Hệ thống đã được cấp chứng chỉ SSL chính thức từ Let's Encrypt (Automated Certificate Authority) gắn trực tiếp cho tên miền **https://thi.azmedia247.com**, ổ khóa xanh bảo mật chuẩn quốc tế TLS 1.2/1.3, không còn cảnh báo chứng chỉ tự ký.
 
 - **Hỏi: Làm sao để kiểm tra log của một container cụ thể khi gặp lỗi?**  
   *Trả lời:* Sử dụng lệnh `docker compose logs -f <service_name>`. Ví dụ: `docker compose logs -f fleet-backend` hoặc `docker compose logs -f fleet-nginx`.
