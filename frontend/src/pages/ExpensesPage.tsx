@@ -13,577 +13,577 @@ import { useAuth } from '../context/AuthContext';
 type ExpenseFilter = 'ALL' | 'FUEL' | 'TOLL' | 'REPAIR' | 'PENDING' | 'APPROVED';
 
 export const ExpensesPage: React.FC = () => {
-  const { user } = useAuth();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [search, setSearch] = useState(''); // NEW
-  const [filter, setFilter] = useState<ExpenseFilter>('ALL'); // NEW
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null); // NEW
-  const [receiptModal, setReceiptModal] = useState<string | null>(null); // NEW: Receipt viewer
+ const { user } = useAuth();
+ const [expenses, setExpenses] = useState<Expense[]>([]);
+ const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+ const [drivers, setDrivers] = useState<Driver[]>([]);
+ const [isModalOpen, setIsModalOpen] = useState(false);
+ const [search, setSearch] = useState(''); // NEW
+ const [filter, setFilter] = useState<ExpenseFilter>('ALL'); // NEW
+ const [editingExpense, setEditingExpense] = useState<Expense | null>(null); // NEW
+ const [receiptModal, setReceiptModal] = useState<string | null>(null); // NEW: Receipt viewer
 
-  const canManageAll = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
-  const canDelete = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
+ const canManageAll = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
+ const canDelete = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
 
-  const [form, setForm] = useState({
-    vehicle: 0,
-    driver: 0,
-    category: 'FUEL',
-    amount: 1500000,
-    expense_date: new Date().toISOString().slice(0, 10),
-    odometer_at_fuel: 0,
-    liters: 65.0,
-    fuel_price_per_liter: 23500,
-    invoice_number: '',
-    notes: '',
-  });
-  const { success, error } = useToast();
+ const [form, setForm] = useState({
+ vehicle: 0,
+ driver: 0,
+ category: 'FUEL',
+ amount: 1500000,
+ expense_date: new Date().toISOString().slice(0, 10),
+ odometer_at_fuel: 0,
+ liters: 65.0,
+ fuel_price_per_liter: 23500,
+ invoice_number: '',
+ notes: '',
+ });
+ const { success, error } = useToast();
 
-  const fetchData = async () => {
-    try {
-      const [eRes, vRes, dRes] = await Promise.all([
-        api.get('/expenses/'),
-        api.get('/vehicles/'),
-        api.get('/drivers/'),
-      ]);
-      setExpenses(eRes.data.results || eRes.data || []);
-      const vList = vRes.data.results || vRes.data || [];
-      const dList = dRes.data.results || dRes.data || [];
-      setVehicles(vList);
-      setDrivers(dList);
-      if (vList.length > 0) setForm(prev => ({ ...prev, vehicle: vList[0].id }));
-      if (dList.length > 0) setForm(prev => ({ ...prev, driver: dList[0].id }));
-    } catch (e) {
-      console.error(e);
-    }
-  };
+ const fetchData = async () => {
+ try {
+ const [eRes, vRes, dRes] = await Promise.all([
+ api.get('/expenses/'),
+ api.get('/vehicles/'),
+ api.get('/drivers/'),
+ ]);
+ setExpenses(eRes.data.results || eRes.data || []);
+ const vList = vRes.data.results || vRes.data || [];
+ const dList = dRes.data.results || dRes.data || [];
+ setVehicles(vList);
+ setDrivers(dList);
+ if (vList.length > 0) setForm(prev => ({ ...prev, vehicle: vList[0].id }));
+ if (dList.length > 0) setForm(prev => ({ ...prev, driver: dList[0].id }));
+ } catch (e) {
+ console.error(e);
+ }
+ };
 
-  useEffect(() => { fetchData(); }, []);
+ useEffect(() => { fetchData(); }, []);
 
-  // NEW: Reset form
-  const resetForm = () => {
-    setForm({
-      vehicle: vehicles[0]?.id || 0, driver: drivers[0]?.id || 0,
-      category: 'FUEL', amount: 1500000, expense_date: new Date().toISOString().slice(0, 10),
-      odometer_at_fuel: 0, liters: 65.0, fuel_price_per_liter: 23500, invoice_number: '', notes: '',
-    });
-  };
+ // NEW: Reset form
+ const resetForm = () => {
+ setForm({
+ vehicle: vehicles[0]?.id || 0, driver: drivers[0]?.id || 0,
+ category: 'FUEL', amount: 1500000, expense_date: new Date().toISOString().slice(0, 10),
+ odometer_at_fuel: 0, liters: 65.0, fuel_price_per_liter: 23500, invoice_number: '', notes: '',
+ });
+ };
 
-  const handleOpenCreate = () => {
-    setEditingExpense(null);
-    resetForm();
-    setIsModalOpen(true);
-  };
+ const handleOpenCreate = () => {
+ setEditingExpense(null);
+ resetForm();
+ setIsModalOpen(true);
+ };
 
-  // NEW: Open edit
-  const handleEdit = (exp: Expense) => {
-    setEditingExpense(exp);
-    setForm({
-      vehicle: exp.vehicle,
-      driver: exp.driver || 0,
-      category: exp.category,
-      amount: Number(exp.amount),
-      expense_date: exp.expense_date,
-      odometer_at_fuel: exp.odometer_at_fuel || 0,
-      liters: Number(exp.liters) || 0,
-      fuel_price_per_liter: Number(exp.fuel_price_per_liter) || 0,
-      invoice_number: exp.invoice_number || '',
-      notes: exp.notes || '',
-    });
-    setIsModalOpen(true);
-  };
+ // NEW: Open edit
+ const handleEdit = (exp: Expense) => {
+ setEditingExpense(exp);
+ setForm({
+ vehicle: exp.vehicle,
+ driver: exp.driver || 0,
+ category: exp.category,
+ amount: Number(exp.amount),
+ expense_date: exp.expense_date,
+ odometer_at_fuel: exp.odometer_at_fuel || 0,
+ liters: Number(exp.liters) || 0,
+ fuel_price_per_liter: Number(exp.fuel_price_per_liter) || 0,
+ invoice_number: exp.invoice_number || '',
+ notes: exp.notes || '',
+ });
+ setIsModalOpen(true);
+ };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await api.post('/expenses/', form);
-      success('Ghi nhận chi phí thành công!');
-      setIsModalOpen(false);
-      fetchData();
-    } catch (err: any) {
-      error('Lỗi lưu chi phí', 'Vui lòng kiểm tra lại thông tin chi phí');
-    }
-  };
+ const handleCreate = async (e: React.FormEvent) => {
+ e.preventDefault();
+ try {
+ await api.post('/expenses/', form);
+ success('Ghi nhận chi phí thành công!');
+ setIsModalOpen(false);
+ fetchData();
+ } catch (err: any) {
+ error('Lỗi lưu chi phí', 'Vui lòng kiểm tra lại thông tin chi phí');
+ }
+ };
 
-  // NEW: Handle update
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingExpense) return;
-    try {
-      await api.put(`/expenses/${editingExpense.id}/`, form);
-      success('Cập nhật chi phí thành công!');
-      setIsModalOpen(false);
-      setEditingExpense(null);
-      fetchData();
-    } catch (err: any) {
-      error('Lỗi cập nhật', 'Vui lòng kiểm tra lại dữ liệu');
-    }
-  };
+ // NEW: Handle update
+ const handleUpdate = async (e: React.FormEvent) => {
+ e.preventDefault();
+ if (!editingExpense) return;
+ try {
+ await api.put(`/expenses/${editingExpense.id}/`, form);
+ success('Cập nhật chi phí thành công!');
+ setIsModalOpen(false);
+ setEditingExpense(null);
+ fetchData();
+ } catch (err: any) {
+ error('Lỗi cập nhật', 'Vui lòng kiểm tra lại dữ liệu');
+ }
+ };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Bạn có chắc muốn xóa bản ghi chi phí này?')) return;
-    try {
-      await api.delete(`/expenses/${id}/`);
-      success('Đã xóa chi phí');
-      fetchData();
-    } catch (e) {
-      error('Lỗi xóa chi phí', 'Chỉ Kế toán hoặc Quản trị viên mới có quyền xóa');
-    }
-  };
+ const handleDelete = async (id: number) => {
+ if (!window.confirm('Bạn có chắc muốn xóa bản ghi chi phí này?')) return;
+ try {
+ await api.delete(`/expenses/${id}/`);
+ success('Đã xóa chi phí');
+ fetchData();
+ } catch (e) {
+ error('Lỗi xóa chi phí', 'Chỉ Kế toán hoặc Quản trị viên mới có quyền xóa');
+ }
+ };
 
-  // Badge màu sắc cho 4 loại chi phí nghiệp vụ
-  const getCategoryBadge = (cat: string, label?: string) => {
-    switch (cat) {
-      case 'FUEL':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Xăng / Dầu</span>;
-      case 'TOLL':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">Phí BOT</span>;
-      case 'REPAIR':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">Sửa chữa / Bảo dưỡng</span>;
-      case 'FINE':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Vé phạt vi phạm</span>;
-      default:
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">{label || cat}</span>;
-    }
-  };
+ // Badge màu sắc cho 4 loại chi phí nghiệp vụ
+ const getCategoryBadge = (cat: string, label?: string) => {
+ switch (cat) {
+ case 'FUEL':
+ return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Xăng / Dầu</span>;
+ case 'TOLL':
+ return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">Phí BOT</span>;
+ case 'REPAIR':
+ return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">Sửa chữa / Bảo dưỡng</span>;
+ case 'FINE':
+ return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Vé phạt vi phạm</span>;
+ default:
+ return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">{label || cat}</span>;
+ }
+ };
 
-  // NEW: Approval badge
-  const getApprovalBadge = (status: string) => {
-    if (status === 'APPROVED') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" /> Đã duyệt</span>;
-    if (status === 'REJECTED') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">Từ chối</span>;
-    return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> Chờ duyệt</span>;
-  };
+ // NEW: Approval badge
+ const getApprovalBadge = (status: string) => {
+ if (status === 'APPROVED') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" /> Đã duyệt</span>;
+ if (status === 'REJECTED') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">Từ chối</span>;
+ return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> Chờ duyệt</span>;
+ };
 
-  // NEW: Stats
-  const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0);
-  const fuelTotal = expenses.filter(e => e.category === 'FUEL').reduce((s, e) => s + Number(e.amount), 0);
-  const tollTotal = expenses.filter(e => e.category === 'TOLL').reduce((s, e) => s + Number(e.amount), 0);
-  const otherTotal = expenses.filter(e => !['FUEL', 'TOLL'].includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
-  const pendingCount = expenses.filter(e => e.approval_status === 'PENDING').length;
-  const approvedCount = expenses.filter(e => e.approval_status === 'APPROVED').length;
+ // NEW: Stats
+ const totalExpense = expenses.reduce((s, e) => s + Number(e.amount), 0);
+ const fuelTotal = expenses.filter(e => e.category === 'FUEL').reduce((s, e) => s + Number(e.amount), 0);
+ const tollTotal = expenses.filter(e => e.category === 'TOLL').reduce((s, e) => s + Number(e.amount), 0);
+ const otherTotal = expenses.filter(e => !['FUEL', 'TOLL'].includes(e.category)).reduce((s, e) => s + Number(e.amount), 0);
+ const pendingCount = expenses.filter(e => e.approval_status === 'PENDING').length;
+ const approvedCount = expenses.filter(e => e.approval_status === 'APPROVED').length;
 
-  // NEW: Filtered list
-  const filtered = expenses.filter(e => {
-    const q = search.toLowerCase();
-    const matchSearch = !q ||
-      (e.vehicle_plate || '').toLowerCase().includes(q) ||
-      (e.driver_name || '').toLowerCase().includes(q) ||
-      (e.invoice_number || '').toLowerCase().includes(q) ||
-      (e.trip_code || '').toLowerCase().includes(q);
-    if (!matchSearch) return false;
-    if (filter === 'ALL') return true;
-    if (filter === 'FUEL') return e.category === 'FUEL';
-    if (filter === 'TOLL') return e.category === 'TOLL';
-    if (filter === 'REPAIR') return e.category === 'REPAIR' || e.category === 'FINE' || e.category === 'OTHER';
-    if (filter === 'PENDING') return e.approval_status === 'PENDING';
-    if (filter === 'APPROVED') return e.approval_status === 'APPROVED';
-    return true;
-  });
+ // NEW: Filtered list
+ const filtered = expenses.filter(e => {
+ const q = search.toLowerCase();
+ const matchSearch = !q ||
+ (e.vehicle_plate || '').toLowerCase().includes(q) ||
+ (e.driver_name || '').toLowerCase().includes(q) ||
+ (e.invoice_number || '').toLowerCase().includes(q) ||
+ (e.trip_code || '').toLowerCase().includes(q);
+ if (!matchSearch) return false;
+ if (filter === 'ALL') return true;
+ if (filter === 'FUEL') return e.category === 'FUEL';
+ if (filter === 'TOLL') return e.category === 'TOLL';
+ if (filter === 'REPAIR') return e.category === 'REPAIR' || e.category === 'FINE' || e.category === 'OTHER';
+ if (filter === 'PENDING') return e.approval_status === 'PENDING';
+ if (filter === 'APPROVED') return e.approval_status === 'APPROVED';
+ return true;
+ });
 
-  // NEW: Stats cards & filter chips
-  const statsCards = [
-    { label: 'Tổng chi phí', value: totalExpense, icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40' },
-    { label: 'Xăng / Dầu', value: fuelTotal, icon: Fuel, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-    { label: 'BOT & Cầu đường', value: tollTotal, icon: MapPin, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
-    { label: 'BD & Khác', value: otherTotal, icon: AlertTriangle, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/40' },
-  ];
+ // NEW: Stats cards & filter chips
+ const statsCards = [
+ { label: 'Tổng chi phí', value: totalExpense, icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40' },
+ { label: 'Xăng / Dầu', value: fuelTotal, icon: Fuel, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+ { label: 'BOT & Cầu đường', value: tollTotal, icon: MapPin, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+ { label: 'BD & Khác', value: otherTotal, icon: AlertTriangle, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-950/40' },
+ ];
 
-  const filterChips: { key: ExpenseFilter; label: string; count: number }[] = [
-    { key: 'ALL', label: 'Tất cả', count: expenses.length },
-    { key: 'FUEL', label: 'Xăng / Dầu', count: expenses.filter(e => e.category === 'FUEL').length },
-    { key: 'TOLL', label: 'Phí BOT', count: expenses.filter(e => e.category === 'TOLL').length },
-    { key: 'REPAIR', label: 'BD & Sửa chữa', count: expenses.filter(e => ['REPAIR', 'FINE', 'OTHER'].includes(e.category)).length },
-    { key: 'PENDING', label: '⏳ Chờ duyệt', count: pendingCount },
-    { key: 'APPROVED', label: '✅ Đã duyệt', count: approvedCount },
-  ];
+ const filterChips: { key: ExpenseFilter; label: string; count: number }[] = [
+ { key: 'ALL', label: 'Tất cả', count: expenses.length },
+ { key: 'FUEL', label: 'Xăng / Dầu', count: expenses.filter(e => e.category === 'FUEL').length },
+ { key: 'TOLL', label: 'Phí BOT', count: expenses.filter(e => e.category === 'TOLL').length },
+ { key: 'REPAIR', label: 'BD & Sửa chữa', count: expenses.filter(e => ['REPAIR', 'FINE', 'OTHER'].includes(e.category)).length },
+ { key: 'PENDING', label: ' Chờ duyệt', count: pendingCount },
+ { key: 'APPROVED', label: ' Đã duyệt', count: approvedCount },
+ ];
 
-  return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Fuel className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" /> Quản Lý Chi Phí & Xăng Dầu (Expenses)
-          </h1>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
-            Ghi nhận và xử lý các loại chi phí: Hóa đơn xăng dầu, phí BOT, sửa chữa và vé phạt vi phạm.
-          </p>
-        </div>
-        <Button onClick={handleOpenCreate} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
-          <Plus className="w-4 h-4" /> Ghi Nhận Chi Phí
-        </Button>
-      </div>
+ return (
+ <div className="space-y-4 sm:space-y-6">
+ {/* Header */}
+ <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+ <div>
+ <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+ <Fuel className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" /> Quản Lý Chi Phí & Xăng Dầu (Expenses)
+ </h1>
+ <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+ Ghi nhận và xử lý các loại chi phí: Hóa đơn xăng dầu, phí BOT, sửa chữa và vé phạt vi phạm.
+ </p>
+ </div>
+ <Button onClick={handleOpenCreate} className="w-full sm:w-auto !flex-row !inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap">
+ <Plus className="w-4 h-4" /> Ghi Nhận Chi Phí
+ </Button>
+ </div>
 
-      {user?.role === 'ACCOUNTANT' && (
-        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-          <ShieldCheck className="w-4 h-4 shrink-0" />
-          <span>Bạn đang đăng nhập với vai trò <strong>Kế toán</strong>. Toàn quyền thẩm định, kiểm tra hóa đơn và duyệt chi phí toàn đội xe.</span>
-        </div>
-      )}
+ {user?.role === 'ACCOUNTANT' && (
+ <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+ <ShieldCheck className="w-4 h-4 shrink-0" />
+ <span>Bạn đang đăng nhập với vai trò <strong>Kế toán</strong>. Toàn quyền thẩm định, kiểm tra hóa đơn và duyệt chi phí toàn đội xe.</span>
+ </div>
+ )}
 
-      {/* NEW: Quick Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-        {statsCards.map((s) => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 border border-white/60 dark:border-slate-800`}>
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white/70 dark:bg-slate-800/60 shrink-0">
-              <s.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.color}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 leading-none truncate">{s.value.toLocaleString('vi-VN')}₫</p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{s.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+ {/* NEW: Quick Stats Cards */}
+ <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+ {statsCards.map((s) => (
+ <div key={s.label} className={`${s.bg} rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 border border-white/60 dark:border-slate-800`}>
+ <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white/70 dark:bg-slate-800/60 shrink-0">
+ <s.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.color}`} />
+ </div>
+ <div className="min-w-0">
+ <p className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 leading-none truncate">{s.value.toLocaleString('vi-VN')}₫</p>
+ <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{s.label}</p>
+ </div>
+ </div>
+ ))}
+ </div>
 
-      {/* NEW: Search bar */}
-      <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-400 shrink-0" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm theo biển số xe, tên tài xế, mã hóa đơn, mã chuyến..."
-          className="bg-transparent text-xs w-full focus:outline-none text-slate-900 dark:text-slate-100"
-        />
-      </div>
+ {/* NEW: Search bar */}
+ <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+ <Search className="w-4 h-4 text-slate-400 shrink-0" />
+ <input
+ type="text"
+ value={search}
+ onChange={(e) => setSearch(e.target.value)}
+ placeholder="Tìm theo biển số xe, tên tài xế, mã hóa đơn, mã chuyến..."
+ className="bg-transparent text-xs w-full focus:outline-none text-slate-900 dark:text-slate-100"
+ />
+ </div>
 
-      {/* NEW: Filter Chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
-        {filterChips.map((chip) => (
-          <button
-            key={chip.key}
-            onClick={() => setFilter(chip.key)}
-            className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all border shrink-0 ${
-              filter === chip.key
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 dark:shadow-indigo-900/40'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            {chip.label}
-            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${
-              filter === chip.key
-                ? 'bg-white/20 text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-            }`}>{chip.count}</span>
-          </button>
-        ))}
-      </div>
+ {/* NEW: Filter Chips */}
+ <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+ {filterChips.map((chip) => (
+ <button
+ key={chip.key}
+ onClick={() => setFilter(chip.key)}
+ className={`px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all border shrink-0 ${
+ filter === chip.key
+ ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 dark:shadow-indigo-900/40'
+ : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+ }`}
+ >
+ {chip.label}
+ <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${
+ filter === chip.key
+ ? 'bg-white/20 text-white'
+ : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+ }`}>{chip.count}</span>
+ </button>
+ ))}
+ </div>
 
-      {/* Mobile Card View */}
-      <div className="block md:hidden space-y-3">
-        {filtered.map((e) => {
-          const isApproved = e.approval_status === 'APPROVED';
-          return (
-          <div key={e.id} className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border shadow-xs space-y-2 ${
-            isApproved ? 'border-emerald-200 dark:border-emerald-900' : 'border-slate-200 dark:border-slate-800'
-          }`}>
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="font-black text-base text-slate-900 dark:text-slate-100">
-                  {Number(e.amount).toLocaleString('vi-VN')} ₫
-                </span>
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-0.5">{e.vehicle_plate}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                {getCategoryBadge(e.category, e.category_display)}
-                {getApprovalBadge(e.approval_status)}
-              </div>
-            </div>
+ {/* Mobile Card View */}
+ <div className="block md:hidden space-y-3">
+ {filtered.map((e) => {
+ const isApproved = e.approval_status === 'APPROVED';
+ return (
+ <div key={e.id} className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border shadow-xs space-y-2 ${
+ isApproved ? 'border-emerald-200 dark:border-emerald-900' : 'border-slate-200 dark:border-slate-800'
+ }`}>
+ <div className="flex items-start justify-between">
+ <div>
+ <span className="font-black text-base text-slate-900 dark:text-slate-100">
+ {Number(e.amount).toLocaleString('vi-VN')} ₫
+ </span>
+ <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-0.5">{e.vehicle_plate}</p>
+ </div>
+ <div className="flex flex-col items-end gap-1">
+ {getCategoryBadge(e.category, e.category_display)}
+ {getApprovalBadge(e.approval_status)}
+ </div>
+ </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div>Ngày: <strong className="text-slate-800 dark:text-slate-200">{new Date(e.expense_date).toLocaleDateString('vi-VN')}</strong></div>
-              <div>Tài xế: <strong className="text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</strong></div>
-              <div>Nhiên liệu: <strong className="text-blue-600 dark:text-blue-400">{e.liters ? `${e.liters} L` : '—'}</strong></div>
-              <div>Đơn giá: <strong className="text-slate-800 dark:text-slate-200">{e.fuel_price_per_liter ? `${Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L` : '—'}</strong></div>
-              {/* NEW: ODO */}
-              {e.category === 'FUEL' && e.odometer_at_fuel ? (
-                <div className="col-span-2 flex items-center gap-1">
-                  <Gauge className="w-3 h-3 text-slate-400" /> ODO lúc đổ: <strong className="text-slate-800 dark:text-slate-200">{e.odometer_at_fuel?.toLocaleString('vi-VN')} km</strong>
-                </div>
-              ) : null}
-              {/* NEW: Trip Link */}
-              {e.trip_code && (
-                <div className="col-span-2 flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-indigo-500" />
-                  <span>Mã chuyến: <strong className="text-indigo-600 dark:text-indigo-400">{e.trip_code}</strong></span>
-                  {e.trip_route && <span className="text-[10px] text-slate-400 truncate">({e.trip_route})</span>}
-                </div>
-              )}
-              <div className="col-span-2">Hóa đơn: <strong className="font-mono text-slate-800 dark:text-slate-200">{e.invoice_number || '—'}</strong></div>
-            </div>
+ <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+ <div>Ngày: <strong className="text-slate-800 dark:text-slate-200">{new Date(e.expense_date).toLocaleDateString('vi-VN')}</strong></div>
+ <div>Tài xế: <strong className="text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</strong></div>
+ <div>Nhiên liệu: <strong className="text-blue-600 dark:text-blue-400">{e.liters ? `${e.liters} L` : '—'}</strong></div>
+ <div>Đơn giá: <strong className="text-slate-800 dark:text-slate-200">{e.fuel_price_per_liter ? `${Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L` : '—'}</strong></div>
+ {/* NEW: ODO */}
+ {e.category === 'FUEL' && e.odometer_at_fuel ? (
+ <div className="col-span-2 flex items-center gap-1">
+ <Gauge className="w-3 h-3 text-slate-400" /> ODO lúc đổ: <strong className="text-slate-800 dark:text-slate-200">{e.odometer_at_fuel?.toLocaleString('vi-VN')} km</strong>
+ </div>
+ ) : null}
+ {/* NEW: Trip Link */}
+ {e.trip_code && (
+ <div className="col-span-2 flex items-center gap-1">
+ <MapPin className="w-3 h-3 text-indigo-500" />
+ <span>Mã chuyến: <strong className="text-indigo-600 dark:text-indigo-400">{e.trip_code}</strong></span>
+ {e.trip_route && <span className="text-[10px] text-slate-400 truncate">({e.trip_route})</span>}
+ </div>
+ )}
+ <div className="col-span-2">Hóa đơn: <strong className="font-mono text-slate-800 dark:text-slate-200">{e.invoice_number || '—'}</strong></div>
+ </div>
 
-            {e.notes && <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800 truncate">{e.notes}</p>}
+ {e.notes && <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800 truncate">{e.notes}</p>}
 
-            {/* NEW: Receipt + Action Buttons */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 w-full flex-wrap">
-              {e.receipt_image_url && (
-                <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
-                  <Paperclip className="w-3 h-3" /> Xem biên lai
-                </button>
-              )}
-              <div className="flex items-center gap-1.5 ml-auto">
-                {canManageAll && (
-                  <button onClick={() => handleEdit(e)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
-                    <Pencil className="w-3 h-3" /> Sửa
-                  </button>
-                )}
-                {canDelete && (
-                  <button
-                    onClick={() => !isApproved && handleDelete(e.id)}
-                    disabled={isApproved}
-                    className={`px-2 py-1 text-[11px] rounded-lg flex items-center gap-1 font-semibold ${
-                      isApproved ? 'text-slate-400 cursor-not-allowed opacity-50' : 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
-                    }`}
-                    title={isApproved ? 'Không thể xóa hóa đơn đã được kế toán phê duyệt' : 'Xóa chi phí'}
-                  >
-                    <Trash2 className="w-3 h-3" /> Xóa
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-        })}
-      </div>
+ {/* NEW: Receipt + Action Buttons */}
+ <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 w-full flex-wrap">
+ {e.receipt_image_url && (
+ <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
+ <Paperclip className="w-3 h-3" /> Xem biên lai
+ </button>
+ )}
+ <div className="flex items-center gap-1.5 ml-auto">
+ {canManageAll && (
+ <button onClick={() => handleEdit(e)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
+ <Pencil className="w-3 h-3" /> Sửa
+ </button>
+ )}
+ {canDelete && (
+ <button
+ onClick={() => !isApproved && handleDelete(e.id)}
+ disabled={isApproved}
+ className={`px-2 py-1 text-[11px] rounded-lg flex items-center gap-1 font-semibold ${
+ isApproved ? 'text-slate-400 cursor-not-allowed opacity-50' : 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+ }`}
+ title={isApproved ? 'Không thể xóa hóa đơn đã được kế toán phê duyệt' : 'Xóa chi phí'}
+ >
+ <Trash2 className="w-3 h-3" /> Xóa
+ </button>
+ )}
+ </div>
+ </div>
+ </div>
+ );
+ })}
+ </div>
 
-      {/* Desktop Table */}
-      <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="py-3 px-4">Ngày</th>
-                <th className="py-3 px-4">Phương Tiện</th>
-                <th className="py-3 px-4">Tài Xế</th>
-                <th className="py-3 px-4">Loại</th>
-                <th className="py-3 px-4">Phê duyệt</th>
-                <th className="py-3 px-4">Số Tiền (VNĐ)</th>
-                <th className="py-3 px-4">Chi tiết</th>
-                <th className="py-3 px-4">Chuyến đi</th>
-                {canDelete && <th className="py-3 px-4 text-right">Thao Tác</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filtered.map((e) => {
-                const isApproved = e.approval_status === 'APPROVED';
-                return (
-                <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                  <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">
-                    {new Date(e.expense_date).toLocaleDateString('vi-VN')}
-                  </td>
-                  <td className="py-3.5 px-4 font-bold text-blue-600 dark:text-blue-400">{e.vehicle_plate}</td>
-                  <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</td>
-                  <td className="py-3.5 px-4">{getCategoryBadge(e.category, e.category_display)}</td>
-                  <td className="py-3.5 px-4">{getApprovalBadge(e.approval_status)}</td>
-                  <td className="py-3.5 px-4 font-black text-slate-900 dark:text-slate-100">
-                    {Number(e.amount).toLocaleString('vi-VN')} ₫
-                  </td>
-                  <td className="py-3.5 px-4">
-                    {e.liters ? (
-                      <div>
-                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{e.liters} Lít</span>
-                        {e.fuel_price_per_liter && (
-                          <span className="text-[10px] text-slate-400 block">@{Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L</span>
-                        )}
-                        {e.odometer_at_fuel ? <span className="text-[10px] text-slate-400 block">ODO: {e.odometer_at_fuel?.toLocaleString('vi-VN')} km</span> : null}
-                      </div>
-                    ) : (
-                      <div>
-                        {e.invoice_number && (
-                          <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                            <ReceiptText className="w-3 h-3 text-emerald-500" /> {e.invoice_number}
-                          </span>
-                        )}
-                        <span className="text-[11px] truncate max-w-xs block text-slate-500">{e.notes || '—'}</span>
-                      </div>
-                    )}
-                    {e.receipt_image_url && (
-                      <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="text-[10px] text-indigo-600 hover:underline mt-0.5 flex items-center gap-0.5">
-                        <Paperclip className="w-2.5 h-2.5" /> Biên lai
-                      </button>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 text-[11px]">
-                    {e.trip_code ? (
-                      <div>
-                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{e.trip_code}</span>
-                        {e.trip_route && <span className="block text-[10px] text-slate-400 truncate max-w-[140px]">{e.trip_route}</span>}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 italic">Ngoài chuyến</span>
-                    )}
-                  </td>
-                  {canDelete && (
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleEdit(e)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors" title="Chỉnh sửa">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => !isApproved && handleDelete(e.id)}
-                          disabled={isApproved}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            isApproved ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
-                          }`}
-                          title={isApproved ? 'Không thể xóa hóa đơn đã được kế toán phê duyệt' : 'Xóa chi phí'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+ {/* Desktop Table */}
+ <div className="hidden md:block rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+ <div className="overflow-x-auto">
+ <table className="w-full text-left text-xs">
+ <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+ <tr>
+ <th className="py-3 px-4">Ngày</th>
+ <th className="py-3 px-4">Phương Tiện</th>
+ <th className="py-3 px-4">Tài Xế</th>
+ <th className="py-3 px-4">Loại</th>
+ <th className="py-3 px-4">Phê duyệt</th>
+ <th className="py-3 px-4">Số Tiền (VNĐ)</th>
+ <th className="py-3 px-4">Chi tiết</th>
+ <th className="py-3 px-4">Chuyến đi</th>
+ {canDelete && <th className="py-3 px-4 text-right">Thao Tác</th>}
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+ {filtered.map((e) => {
+ const isApproved = e.approval_status === 'APPROVED';
+ return (
+ <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+ <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">
+ {new Date(e.expense_date).toLocaleDateString('vi-VN')}
+ </td>
+ <td className="py-3.5 px-4 font-bold text-blue-600 dark:text-blue-400">{e.vehicle_plate}</td>
+ <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</td>
+ <td className="py-3.5 px-4">{getCategoryBadge(e.category, e.category_display)}</td>
+ <td className="py-3.5 px-4">{getApprovalBadge(e.approval_status)}</td>
+ <td className="py-3.5 px-4 font-black text-slate-900 dark:text-slate-100">
+ {Number(e.amount).toLocaleString('vi-VN')} ₫
+ </td>
+ <td className="py-3.5 px-4">
+ {e.liters ? (
+ <div>
+ <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{e.liters} Lít</span>
+ {e.fuel_price_per_liter && (
+ <span className="text-[10px] text-slate-400 block">@{Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L</span>
+ )}
+ {e.odometer_at_fuel ? <span className="text-[10px] text-slate-400 block">ODO: {e.odometer_at_fuel?.toLocaleString('vi-VN')} km</span> : null}
+ </div>
+ ) : (
+ <div>
+ {e.invoice_number && (
+ <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+ <ReceiptText className="w-3 h-3 text-emerald-500" /> {e.invoice_number}
+ </span>
+ )}
+ <span className="text-[11px] truncate max-w-xs block text-slate-500">{e.notes || '—'}</span>
+ </div>
+ )}
+ {e.receipt_image_url && (
+ <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="text-[10px] text-indigo-600 hover:underline mt-0.5 flex items-center gap-0.5">
+ <Paperclip className="w-2.5 h-2.5" /> Biên lai
+ </button>
+ )}
+ </td>
+ <td className="py-3.5 px-4 text-[11px]">
+ {e.trip_code ? (
+ <div>
+ <span className="font-bold text-indigo-600 dark:text-indigo-400">{e.trip_code}</span>
+ {e.trip_route && <span className="block text-[10px] text-slate-400 truncate max-w-[140px]">{e.trip_route}</span>}
+ </div>
+ ) : (
+ <span className="text-slate-400 italic">Ngoài chuyến</span>
+ )}
+ </td>
+ {canDelete && (
+ <td className="py-3.5 px-4 text-right">
+ <div className="flex items-center justify-end gap-1">
+ <button onClick={() => handleEdit(e)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors" title="Chỉnh sửa">
+ <Pencil className="w-3.5 h-3.5" />
+ </button>
+ <button
+ onClick={() => !isApproved && handleDelete(e.id)}
+ disabled={isApproved}
+ className={`p-1.5 rounded-lg transition-colors ${
+ isApproved ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+ }`}
+ title={isApproved ? 'Không thể xóa hóa đơn đã được kế toán phê duyệt' : 'Xóa chi phí'}
+ >
+ <Trash2 className="w-3.5 h-3.5" />
+ </button>
+ </div>
+ </td>
+ )}
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
+ </div>
+ </div>
 
-      {filtered.length === 0 && (
-        <div className="text-center py-12 text-slate-400 dark:text-slate-600">
-          <Fuel className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Không tìm thấy chi phí nào phù hợp.</p>
-        </div>
-      )}
+ {filtered.length === 0 && (
+ <div className="text-center py-12 text-slate-400 dark:text-slate-600">
+ <Fuel className="w-12 h-12 mx-auto mb-3 opacity-30" />
+ <p className="text-sm">Không tìm thấy chi phí nào phù hợp.</p>
+ </div>
+ )}
 
-      {/* NEW: Receipt Image Modal */}
-      <Modal isOpen={!!receiptModal} onClose={() => setReceiptModal(null)} title="📎 Hóa đơn / Biên lai">
-        <div className="flex flex-col items-center gap-4">
-          {receiptModal && (
-            <img src={receiptModal} alt="Biên lai" className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg" />
-          )}
-          <p className="text-[11px] text-slate-400 text-center">Ảnh chụp biên lai / hóa đơn GTGT gốc do tài xế nộp lại kế toán.</p>
-          <Button variant="outline" onClick={() => setReceiptModal(null)}>Đóng</Button>
-        </div>
-      </Modal>
+ {/* NEW: Receipt Image Modal */}
+ <Modal isOpen={!!receiptModal} onClose={() => setReceiptModal(null)} title=" Hóa đơn / Biên lai">
+ <div className="flex flex-col items-center gap-4">
+ {receiptModal && (
+ <img src={receiptModal} alt="Biên lai" className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg" />
+ )}
+ <p className="text-[11px] text-slate-400 text-center">Ảnh chụp biên lai / hóa đơn GTGT gốc do tài xế nộp lại kế toán.</p>
+ <Button variant="outline" onClick={() => setReceiptModal(null)}>Đóng</Button>
+ </div>
+ </Modal>
 
-      {/* Modal Thêm / Chỉnh sửa Chi Phí */}
-      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingExpense(null); }} title={editingExpense ? 'Chỉnh Sửa Chi Phí' : 'Ghi Nhận Chi Phí Mới'}>
-        <form onSubmit={editingExpense ? handleUpdate : handleCreate} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Phương tiện *</label>
-              <select
-                value={form.vehicle}
-                onChange={(e) => setForm({ ...form, vehicle: parseInt(e.target.value) })}
-                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-                required
-              >
-                {vehicles.map(v => (
-                  <option key={v.id} value={v.id}>{v.plate_number} - {v.model_name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Tài xế thực hiện</label>
-              <select
-                value={form.driver}
-                onChange={(e) => setForm({ ...form, driver: parseInt(e.target.value) })}
-                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-              >
-                <option value={0}>-- Chọn tài xế (nếu có) --</option>
-                {drivers.map(d => (
-                  <option key={d.id} value={d.id}>{d.full_name} ({d.driver_code})</option>
-                ))}
-              </select>
-            </div>
-          </div>
+ {/* Modal Thêm / Chỉnh sửa Chi Phí */}
+ <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingExpense(null); }} title={editingExpense ? 'Chỉnh Sửa Chi Phí' : 'Ghi Nhận Chi Phí Mới'}>
+ <form onSubmit={editingExpense ? handleUpdate : handleCreate} className="space-y-4">
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ <div>
+ <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Phương tiện *</label>
+ <select
+ value={form.vehicle}
+ onChange={(e) => setForm({ ...form, vehicle: parseInt(e.target.value) })}
+ className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+ required
+ >
+ {vehicles.map(v => (
+ <option key={v.id} value={v.id}>{v.plate_number} - {v.model_name}</option>
+ ))}
+ </select>
+ </div>
+ <div>
+ <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Tài xế thực hiện</label>
+ <select
+ value={form.driver}
+ onChange={(e) => setForm({ ...form, driver: parseInt(e.target.value) })}
+ className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+ >
+ <option value={0}>-- Chọn tài xế (nếu có) --</option>
+ {drivers.map(d => (
+ <option key={d.id} value={d.id}>{d.full_name} ({d.driver_code})</option>
+ ))}
+ </select>
+ </div>
+ </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Khoản mục chi phí *</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-              >
-                <option value="FUEL">1. Hóa đơn Xăng dầu (Nhiên liệu)</option>
-                <option value="TOLL">2. Phí cầu đường (Trạm BOT / VETC)</option>
-                <option value="REPAIR">3. Sửa chữa / Bảo dưỡng định kỳ</option>
-                <option value="FINE">4. Vé phạt vi phạm giao thông</option>
-                <option value="OTHER">5. Chi phí khác</option>
-              </select>
-            </div>
-            <Input
-              label="Số tiền thanh toán (VNĐ) *"
-              type="number"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
-              required
-            />
-          </div>
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ <div>
+ <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Khoản mục chi phí *</label>
+ <select
+ value={form.category}
+ onChange={(e) => setForm({ ...form, category: e.target.value })}
+ className="w-full text-xs p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+ >
+ <option value="FUEL">1. Hóa đơn Xăng dầu (Nhiên liệu)</option>
+ <option value="TOLL">2. Phí cầu đường (Trạm BOT / VETC)</option>
+ <option value="REPAIR">3. Sửa chữa / Bảo dưỡng định kỳ</option>
+ <option value="FINE">4. Vé phạt vi phạm giao thông</option>
+ <option value="OTHER">5. Chi phí khác</option>
+ </select>
+ </div>
+ <Input
+ label="Số tiền thanh toán (VNĐ) *"
+ type="number"
+ value={form.amount}
+ onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
+ required
+ />
+ </div>
 
-          {form.category === 'FUEL' && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl">
-              <Input
-                label="Số lít nhiên liệu"
-                type="number"
-                step="0.1"
-                value={form.liters}
-                onChange={(e) => {
-                  const liters = parseFloat(e.target.value) || 0;
-                  setForm(prev => ({
-                    ...prev, liters,
-                    amount: prev.fuel_price_per_liter ? Math.round(liters * prev.fuel_price_per_liter) : prev.amount
-                  }));
-                }}
-              />
-              <Input
-                label="Đơn giá (VNĐ/Lít)"
-                type="number"
-                value={form.fuel_price_per_liter}
-                onChange={(e) => {
-                  const price = parseFloat(e.target.value) || 0;
-                  setForm(prev => ({
-                    ...prev, fuel_price_per_liter: price,
-                    amount: prev.liters ? Math.round(prev.liters * price) : prev.amount
-                  }));
-                }}
-              />
-              <Input
-                label="Chỉ số ODO (km)"
-                type="number"
-                value={form.odometer_at_fuel}
-                onChange={(e) => setForm({ ...form, odometer_at_fuel: parseInt(e.target.value) || 0 })}
-                placeholder="VD: 34500"
-              />
-            </div>
-          )}
+ {form.category === 'FUEL' && (
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl">
+ <Input
+ label="Số lít nhiên liệu"
+ type="number"
+ step="0.1"
+ value={form.liters}
+ onChange={(e) => {
+ const liters = parseFloat(e.target.value) || 0;
+ setForm(prev => ({
+ ...prev, liters,
+ amount: prev.fuel_price_per_liter ? Math.round(liters * prev.fuel_price_per_liter) : prev.amount
+ }));
+ }}
+ />
+ <Input
+ label="Đơn giá (VNĐ/Lít)"
+ type="number"
+ value={form.fuel_price_per_liter}
+ onChange={(e) => {
+ const price = parseFloat(e.target.value) || 0;
+ setForm(prev => ({
+ ...prev, fuel_price_per_liter: price,
+ amount: prev.liters ? Math.round(prev.liters * price) : prev.amount
+ }));
+ }}
+ />
+ <Input
+ label="Chỉ số ODO (km)"
+ type="number"
+ value={form.odometer_at_fuel}
+ onChange={(e) => setForm({ ...form, odometer_at_fuel: parseInt(e.target.value) || 0 })}
+ placeholder="VD: 34500"
+ />
+ </div>
+ )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              label="Số hóa đơn GTGT / Mã biên lai"
-              value={form.invoice_number}
-              onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
-              placeholder="VD: HD-PETROLIMEX-9988 hoặc VETC-881"
-            />
-            <Input
-              label="Ngày phát sinh *"
-              type="date"
-              value={form.expense_date}
-              onChange={(e) => setForm({ ...form, expense_date: e.target.value })}
-              required
-            />
-          </div>
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ <Input
+ label="Số hóa đơn GTGT / Mã biên lai"
+ value={form.invoice_number}
+ onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
+ placeholder="VD: HD-PETROLIMEX-9988 hoặc VETC-881"
+ />
+ <Input
+ label="Ngày phát sinh *"
+ type="date"
+ value={form.expense_date}
+ onChange={(e) => setForm({ ...form, expense_date: e.target.value })}
+ required
+ />
+ </div>
 
-          <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Ghi chú diễn giải</label>
-            <Input
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="VD: Đổ đầy bình dầu Diesel tại Trạm xăng Km45..."
-            />
-          </div>
+ <div>
+ <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Ghi chú diễn giải</label>
+ <Input
+ value={form.notes}
+ onChange={(e) => setForm({ ...form, notes: e.target.value })}
+ placeholder="VD: Đổ đầy bình dầu Diesel tại Trạm xăng Km45..."
+ />
+ </div>
 
-          <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
-            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { setIsModalOpen(false); setEditingExpense(null); }}>Hủy</Button>
-            <Button type="submit" className="w-full sm:w-auto">{editingExpense ? 'Cập Nhật' : 'Lưu Chi Phí'}</Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
-  );
+ <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
+ <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { setIsModalOpen(false); setEditingExpense(null); }}>Hủy</Button>
+ <Button type="submit" className="w-full sm:w-auto">{editingExpense ? 'Cập Nhật' : 'Lưu Chi Phí'}</Button>
+ </div>
+ </form>
+ </Modal>
+ </div>
+ );
 };
