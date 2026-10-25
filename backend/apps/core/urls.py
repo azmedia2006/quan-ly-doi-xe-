@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import DashboardStatsView, GlobalSearchView
+from .views import DashboardStatsView, GlobalSearchView, AuditLogListView
 
 urlpatterns = [
     path('dashboard-stats/', DashboardStatsView.as_view(), name='dashboard_stats'),
     path('global-search/', GlobalSearchView.as_view(), name='global_search'),
+    path('audit-logs/', AuditLogListView.as_view(), name='audit_logs'),
 ]

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import {
  Settings, ShieldCheck, Server, ExternalLink, UserCheck, Bell, Database,
  Shield, Fuel, Wrench, Key, Send, Search, Download, Clock, CheckCircle2,
@@ -86,9 +87,25 @@ export const SettingsPage: React.FC = () => {
  const { success } = useToast();
  const [activeTab, setActiveTab] = useState<TabKey>('general');
 
- // Audit log filters
+ // Real Audit log states
+ const [auditLogs, setAuditLogs] = useState<any[]>([]);
  const [auditSearch, setAuditSearch] = useState('');
  const [auditRoleFilter, setAuditRoleFilter] = useState('');
+
+ const fetchAuditLogs = async () => {
+ try {
+ const res = await api.get('/core/audit-logs/');
+ setAuditLogs(res.data.results || res.data || []);
+ } catch (e) {
+ console.error('Failed to load audit logs', e);
+ }
+ };
+
+ useEffect(() => {
+ fetchAuditLogs();
+ const interval = setInterval(fetchAuditLogs, 4000);
+ return () => clearInterval(interval);
+ }, []);
 
  // Config states (mock)
  const [alertRegDays, setAlertRegDays] = useState(30);
@@ -117,7 +134,7 @@ export const SettingsPage: React.FC = () => {
  success(`Đã chuyển đổi môi trường sang: ${DEMO_CREDENTIALS[targetRole]?.label || targetRole}`);
  };
 
- const filteredAuditLogs = MOCK_AUDIT_LOGS.filter(log => {
+ const filteredAuditLogs = auditLogs.filter(log => {
  const matchSearch = !auditSearch || log.action.toLowerCase().includes(auditSearch.toLowerCase()) || log.detail.toLowerCase().includes(auditSearch.toLowerCase()) || log.user.includes(auditSearch);
  const matchRole = !auditRoleFilter || log.role === auditRoleFilter;
  return matchSearch && matchRole;

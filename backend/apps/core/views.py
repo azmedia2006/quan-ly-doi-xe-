@@ -102,3 +102,23 @@ class GlobalSearchView(APIView):
             })
 
         return Response({'results': results})
+
+class AuditLogListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import AuditLog
+        logs = AuditLog.objects.all().order_by('-timestamp')[:50]
+        results = [
+            {
+                'id': log.id,
+                'ts': log.timestamp.strftime('%d/%m/%Y %H:%M:%S'),
+                'user': log.username,
+                'role': log.role,
+                'action': log.action,
+                'detail': log.detail,
+                'ip': log.ip_address,
+            }
+            for log in logs
+        ]
+        return Response({'results': results})
