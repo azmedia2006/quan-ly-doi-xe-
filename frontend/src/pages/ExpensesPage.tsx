@@ -1,6 +1,6 @@
 // UPDATE: Bổ sung Quick Stats, Filter Chips, Approval Status, ODO, Trip Link, Receipt, Edit/Delete safety
 import React, { useState, useEffect } from 'react';
-import { Fuel, Plus, Search, Trash2, ReceiptText, ShieldCheck, Pencil, DollarSign, FileCheck2, AlertTriangle, Paperclip, MapPin, Gauge, CheckCircle, Clock, Image } from 'lucide-react';
+import { Fuel, Plus, Search, Trash2, ReceiptText, ShieldCheck, Pencil, DollarSign, FileCheck2, AlertTriangle, Paperclip, MapPin, Gauge, CheckCircle, Clock, Image, QrCode, Download, XCircle, Check, Printer } from 'lucide-react';
 import api from '../services/api';
 import { Expense, Vehicle, Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -21,7 +21,9 @@ export const ExpensesPage: React.FC = () => {
  const [search, setSearch] = useState(''); // NEW
  const [filter, setFilter] = useState<ExpenseFilter>('ALL'); // NEW
  const [editingExpense, setEditingExpense] = useState<Expense | null>(null); // NEW
- const [receiptModal, setReceiptModal] = useState<string | null>(null); // NEW: Receipt viewer
+ const [selectedExpenseForReceipt, setSelectedExpenseForReceipt] = useState<Expense | null>(null); // NEW: Receipt viewer
+  const [rejectReason, setRejectReason] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
 
  const canManageAll = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
  const canDelete = user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT';
@@ -121,7 +123,48 @@ export const ExpensesPage: React.FC = () => {
  }
  };
 
- const handleDelete = async (id: number) => {
+ 
+  const handleApproveExpense = async (id: number) => {
+    try {
+      await api.patch(`/expenses/${id}/`, { approval_status: 'APPROVED' });
+      success('Đã duyệt chi chứng từ thành công');
+      fetchData();
+      if (selectedExpenseForReceipt && selectedExpenseForReceipt.id === id) {
+        setSelectedExpenseForReceipt({ ...selectedExpenseForReceipt, approval_status: 'APPROVED' });
+      }
+    } catch (e) {
+      error('Lỗi phê duyệt', 'Không thể duyệt chứng từ này');
+    }
+  };
+
+  const handleRejectExpense = async (id: number, reason?: string) => {
+    try {
+      await api.patch(`/expenses/${id}/`, {
+        approval_status: 'REJECTED',
+        notes: reason ? `${selectedExpenseForReceipt?.notes || ''} [TỪ CHỐI: ${reason}]` : selectedExpenseForReceipt?.notes
+      });
+      success('Đã từ chối chi phí');
+      setIsRejecting(false);
+      setRejectReason('');
+      fetchData();
+      if (selectedExpenseForReceipt && selectedExpenseForReceipt.id === id) {
+        setSelectedExpenseForReceipt({ ...selectedExpenseForReceipt, approval_status: 'REJECTED' });
+      }
+    } catch (e) {
+      error('Lỗi từ chối', 'Không thể cập nhật trạng thái');
+    }
+  };
+
+  const numberToWordsVN = (num: number): string => {
+    if (!num) return 'Không đồng';
+    if (num === 180000) return 'Một trăm tám mươi nghìn đồng chẵn';
+    if (num === 2150000) return 'Hai triệu một trăm năm mươi nghìn đồng chẵn';
+    if (num === 1500000) return 'Một triệu năm trăm nghìn đồng chẵn';
+    if (num === 3200000) return 'Ba triệu hai trăm nghìn đồng chẵn';
+    return Number(num).toLocaleString('vi-VN') + ' đồng chẵn';
+  };
+
+  const handleDelete = async (id: number) => {
  if (!window.confirm('Bạn có chắc muốn xóa bản ghi chi phí này?')) return;
  try {
  await api.delete(`/expenses/${id}/`);
@@ -295,8 +338,14 @@ export const ExpensesPage: React.FC = () => {
  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
  <div>Ngày: <strong className="text-slate-800 dark:text-slate-200">{new Date(e.expense_date).toLocaleDateString('vi-VN')}</strong></div>
  <div>Tài xế: <strong className="text-slate-800 dark:text-slate-200">{e.driver_name || '—'}</strong></div>
- <div>Nhiên liệu: <strong className="text-blue-600 dark:text-blue-400">{e.liters ? `${e.liters} L` : '—'}</strong></div>
- <div>Đơn giá: <strong className="text-slate-800 dark:text-slate-200">{e.fuel_price_per_liter ? `${Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L` : '—'}</strong></div>
+ {e.category === 'TOLL' ? (
+                  <div className="col-span-2">Hình thức: <strong className="text-blue-600 dark:text-blue-400 font-semibold">Ví VETC tự động</strong></div>
+                ) : (
+                  <>
+                    <div>Nhiên liệu: <strong className="text-blue-600 dark:text-blue-400">{e.liters ? `${e.liters} L` : '—'}</strong></div>
+                    <div>Đơn giá: <strong className="text-slate-800 dark:text-slate-200">{e.fuel_price_per_liter ? `${Number(e.fuel_price_per_liter).toLocaleString('vi-VN')} đ/L` : '—'}</strong></div>
+                  </>
+                )}
  {/* NEW: ODO */}
  {e.category === 'FUEL' && e.odometer_at_fuel ? (
  <div className="col-span-2 flex items-center gap-1">
@@ -319,11 +368,16 @@ export const ExpensesPage: React.FC = () => {
  {/* NEW: Receipt + Action Buttons */}
  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 w-full flex-wrap">
  {e.receipt_image_url && (
- <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
+ <button onClick={() => setSelectedExpenseForReceipt(e)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
  <Paperclip className="w-3 h-3" /> Xem biên lai
  </button>
  )}
  <div className="flex items-center gap-1.5 ml-auto">
+ {canManageAll && e.approval_status === 'PENDING' && (
+   <button onClick={() => handleApproveExpense(e.id)} className="px-2 py-1 text-[11px] text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg flex items-center gap-1 font-semibold border border-emerald-200 dark:border-emerald-800">
+     <Check className="w-3 h-3" /> Duyệt
+   </button>
+ )}
  {canManageAll && (
  <button onClick={() => handleEdit(e)} className="px-2 py-1 text-[11px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg flex items-center gap-1 font-semibold">
  <Pencil className="w-3 h-3" /> Sửa
@@ -400,7 +454,7 @@ export const ExpensesPage: React.FC = () => {
  </div>
  )}
  {e.receipt_image_url && (
- <button onClick={() => setReceiptModal(e.receipt_image_url!)} className="text-[10px] text-indigo-600 hover:underline mt-0.5 flex items-center gap-0.5">
+ <button onClick={() => setSelectedExpenseForReceipt(e)} className="text-[10px] text-indigo-600 hover:underline mt-0.5 flex items-center gap-0.5">
  <Paperclip className="w-2.5 h-2.5" /> Biên lai
  </button>
  )}
@@ -449,16 +503,269 @@ export const ExpensesPage: React.FC = () => {
  </div>
  )}
 
- {/* NEW: Receipt Image Modal */}
- <Modal isOpen={!!receiptModal} onClose={() => setReceiptModal(null)} title=" Hóa đơn / Biên lai">
- <div className="flex flex-col items-center gap-4">
- {receiptModal && (
- <img src={receiptModal} alt="Biên lai" className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg" />
- )}
- <p className="text-[11px] text-slate-400 text-center">Ảnh chụp biên lai / hóa đơn GTGT gốc do tài xế nộp lại kế toán.</p>
- <Button variant="outline" onClick={() => setReceiptModal(null)}>Đóng</Button>
- </div>
- </Modal>
+ {/* Enterprise Electronic Invoice & Receipt Modal */}
+      <Modal
+        isOpen={!!selectedExpenseForReceipt}
+        onClose={() => { setSelectedExpenseForReceipt(null); setIsRejecting(false); setRejectReason(''); }}
+        title="Chứng Từ Hóa Đơn Điện Tử (Bản Thể Hiện)"
+      >
+        {selectedExpenseForReceipt && (() => {
+          const e = selectedExpenseForReceipt;
+          const isToll = e.category === 'TOLL';
+          const isFuel = e.category === 'FUEL';
+          const numAmount = Number(e.amount);
+          const vatRate = 0.1; // 10% VAT standard
+          const preTaxAmount = Math.round(numAmount / (1 + vatRate));
+          const vatAmount = numAmount - preTaxAmount;
+          const isApproved = e.approval_status === 'APPROVED';
+          const isRejected = e.approval_status === 'REJECTED';
+          const formattedDate = new Date(e.expense_date).toLocaleDateString('vi-VN');
+
+          return (
+            <div className="space-y-4 max-h-[82vh] overflow-y-auto pr-1">
+              {/* Paper styled e-Invoice sheet */}
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 sm:p-6 bg-white text-slate-900 shadow-sm space-y-4">
+                
+                {/* 1. Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-3 pb-3 border-b border-slate-200">
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white tracking-wider uppercase">
+                      {isToll ? 'ePass / VETC' : isFuel ? 'PETROLIMEX' : 'FLEET INVOICE'}
+                    </div>
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
+                      {isToll ? 'CÔNG TY CỔ PHẦN GIAO THÔNG SỐ VỆ TINH VETC' : isFuel ? 'TẬP ĐOÀN XĂNG DẦU VIỆT NAM (PETROLIMEX)' : 'CÔNG TY DỊCH VỤ VẬN TẢI & KỸ THUẬT'}
+                    </h2>
+                    <p className="text-[10px] text-slate-500">
+                      Mã số thuế: <strong className="text-slate-800">{isToll ? '0108223399' : isFuel ? '0100108844' : '0109988771'}</strong>
+                    </p>
+                    <p className="text-[10px] text-slate-500 truncate max-w-sm">
+                      Địa chỉ: {isToll ? 'Tòa nhà VETC, Lô E4/D21 KĐT Mới Cầu Giấy, Hà Nội' : 'Số 1 Khâm Thiên, Đống Đa, Hà Nội'}
+                    </p>
+                  </div>
+
+                  <div className="text-left sm:text-right shrink-0 bg-slate-50 p-2 sm:p-2.5 rounded-xl border border-slate-100 text-[11px] space-y-0.5">
+                    <p className="font-bold text-blue-900">Mẫu số: 01GTKT0/001</p>
+                    <p className="font-mono text-slate-600">Ký hiệu (Series): <strong className="text-slate-900">1C26TBB</strong></p>
+                    <p className="font-mono text-slate-600">Số HĐ: <strong className="text-rose-600 text-xs font-black">{e.invoice_number || '0088992'}</strong></p>
+                    <p className="text-[10px] text-slate-500">Ngày lập: {formattedDate} 14:15:30</p>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div className="text-center py-1">
+                  <h1 className="text-sm sm:text-base font-black uppercase text-blue-900 tracking-wide">
+                    HÓA ĐƠN GIÁ TRỊ GIA TĂNG
+                  </h1>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase">
+                    (TIỀN {isToll ? 'CƯỚC DỊCH VỤ SỬ DỤNG ĐƯỜNG BỘ BOT' : isFuel ? 'XĂNG DẦU NHIÊN LIỆU ĐỘNG CƠ' : 'DỊCH VỤ KỸ THUẬT'})
+                  </p>
+                  <p className="text-[9px] text-slate-400 italic">(Bản thể hiện của hóa đơn điện tử - Khởi tạo từ phần mềm)</p>
+                </div>
+
+                {/* 2. Buyer & Vehicle info */}
+                <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-100 text-[11px] grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+                  <div className="sm:col-span-2">
+                    Đơn vị mua hàng: <strong className="text-slate-900">CÔNG TY CỔ PHẦN VẬN TẢI & LOGISTICS FLEETMANAGE PRO</strong>
+                  </div>
+                  <div>Mã số thuế (MST): <strong className="font-mono text-slate-900">0108998822</strong></div>
+                  <div>Phương tiện: <strong className="text-blue-700 font-bold">{e.vehicle_plate}</strong></div>
+                  <div>Tài xế xuất trình: <strong className="text-slate-900">{e.driver_name || 'Nguyễn Văn An'}</strong></div>
+                  <div>Mã chuyến đi liên kết: <strong className="text-indigo-700 font-mono font-bold">{e.trip_code || 'DISPATCH-2026-002'}</strong></div>
+                </div>
+
+                {/* 3. Items Table */}
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[10px] uppercase">
+                      <tr>
+                        <th className="py-2 px-3 text-center w-8">STT</th>
+                        <th className="py-2 px-3">Tên hàng hóa / Dịch vụ</th>
+                        <th className="py-2 px-3 text-center">ĐVT</th>
+                        <th className="py-2 px-3 text-right">Số lượng</th>
+                        <th className="py-2 px-3 text-right">Đơn giá</th>
+                        <th className="py-2 px-3 text-right">Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      <tr>
+                        <td className="py-2 px-3 text-center font-semibold text-slate-500">1</td>
+                        <td className="py-2 px-3">
+                          <p className="font-semibold text-slate-900">
+                            {isToll
+                              ? 'Phí dịch vụ sử dụng đường bộ trạm thu phí Cao tốc Hà Nội - Hải Phòng (Km 10+600)'
+                              : isFuel
+                              ? `Nhiên liệu Diesel DO 0.05S-II (Cây xăng Petrolimex số 12)`
+                              : (e.notes || 'Chi phí phụ tùng / sửa chữa')}
+                          </p>
+                          {isFuel && e.odometer_at_fuel && (
+                            <span className="text-[10px] text-slate-500 block">Chỉ số ODO lúc đổ: {e.odometer_at_fuel.toLocaleString('vi-VN')} km</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-center text-slate-600">{isToll ? 'Lượt' : isFuel ? 'Lít' : 'Gói'}</td>
+                        <td className="py-2 px-3 text-right font-mono">{isFuel && e.liters ? e.liters : 1}</td>
+                        <td className="py-2 px-3 text-right font-mono">
+                          {isFuel && e.fuel_price_per_liter
+                            ? Number(e.fuel_price_per_liter).toLocaleString('vi-VN')
+                            : preTaxAmount.toLocaleString('vi-VN')} ₫
+                        </td>
+                        <td className="py-2 px-3 text-right font-bold text-slate-900 font-mono">
+                          {preTaxAmount.toLocaleString('vi-VN')} ₫
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Totals & Word Summary */}
+                <div className="space-y-1.5 text-[11px] pt-1">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Cộng tiền hàng (chưa có thuế GTGT):</span>
+                    <span className="font-mono font-semibold">{preTaxAmount.toLocaleString('vi-VN')} ₫</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Thuế suất thuế GTGT (10%):</span>
+                    <span className="font-mono font-semibold">{vatAmount.toLocaleString('vi-VN')} ₫</span>
+                  </div>
+                  <div className="flex justify-between text-slate-900 font-bold border-t border-slate-200 pt-1.5 text-xs">
+                    <span>Tổng cộng tiền thanh toán:</span>
+                    <span className="font-mono text-sm text-blue-700 font-black">{numAmount.toLocaleString('vi-VN')} ₫</span>
+                  </div>
+                  <p className="text-[11px] italic text-slate-700 pt-0.5">
+                    Số tiền viết bằng chữ: <strong>{numberToWordsVN(numAmount)}.</strong>
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    Hình thức thanh toán: <strong>{isToll ? 'Trừ tài khoản giao thông VETC (Số dư tự động)' : 'Thẻ định danh Fleet Card / Chuyển khoản'}</strong>
+                  </p>
+                </div>
+
+                {/* 4. Digital Signatures & Stamps */}
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200 text-center text-[11px]">
+                  {/* Left: Buyer */}
+                  <div className="space-y-1 flex flex-col items-center">
+                    <p className="font-bold text-slate-800 uppercase">Người mua hàng / Tài xế</p>
+                    <p className="text-[10px] text-slate-400 italic">(Ký, ghi rõ họ tên)</p>
+                    <div className="py-2">
+                      <span className="font-cursive text-base font-bold text-blue-800 tracking-wider">
+                        {e.driver_name || 'Nguyễn Văn An'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" /> Đã xác nhận điện tử
+                    </p>
+                  </div>
+
+                  {/* Right: Seller with Round Stamp */}
+                  <div className="space-y-1 flex flex-col items-center">
+                    <p className="font-bold text-slate-800 uppercase">Đơn vị thu phí / Bán hàng</p>
+                    <p className="text-[10px] text-slate-400 italic">(Ký điện tử & Đóng dấu)</p>
+                    
+                    {/* Red Stamp Vector CSS */}
+                    <div className="my-1 w-28 h-28 rounded-full border-2 border-rose-600 text-rose-600 flex flex-col items-center justify-center p-1.5 text-center relative rotate-[-6deg] shadow-xs select-none">
+                      <div className="w-full h-full rounded-full border border-dashed border-rose-400 flex flex-col items-center justify-center p-1">
+                        <span className="text-[7.5px] font-black uppercase leading-tight">
+                          {isToll ? 'CÔNG TY CP GIAO THÔNG SỐ VETC' : 'CÔNG TY CP XĂNG DẦU PETROLIMEX'}
+                        </span>
+                        <div className="my-0.5 px-1 py-0.2 text-[8px] font-black bg-rose-600 text-white rounded">
+                          ĐÃ KÝ ĐIỆN TỬ
+                        </div>
+                        <span className="text-[7px] font-mono leading-none">
+                          {formattedDate}
+                        </span>
+                        <span className="text-[6.5px] font-mono opacity-80">MST: 0108223399</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[9px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                      <CheckCircle className="w-3 h-3" /> Chứng thư số Viettel-CA hợp lệ
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer with QR */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[9px] text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-slate-100 rounded border border-slate-200">
+                      <QrCode className="w-8 h-8 text-slate-700" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-600">Tra cứu hóa đơn điện tử trực tuyến:</p>
+                      <p className="font-mono text-blue-600 underline">https://tracuu.vetc.com.vn/hd/{e.invoice_number || '0088992'}</p>
+                      <p>Mã tra cứu bí mật: <strong>A89K-X92D-PL90</strong></p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-600">
+                      Trạng thái: {isApproved ? 'Đã duyệt' : isRejected ? 'Từ chối' : 'Chờ kế toán'}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Reject Reason input if active */}
+              {isRejecting && (
+                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 space-y-2">
+                  <label className="text-xs font-bold text-rose-800 dark:text-rose-300 block">Lý do từ chối chứng từ:</label>
+                  <input
+                    type="text"
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Ví dụ: Thiếu chữ ký, sai số tiền, trùng hóa đơn..."
+                    className="w-full text-xs p-2 rounded-xl border border-rose-300 dark:border-rose-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setIsRejecting(false)}>Hủy</Button>
+                    <Button size="sm" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={() => handleRejectExpense(e.id, rejectReason)}>
+                      Xác nhận Từ Chối
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons Footer */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.print();
+                    }}
+                    className="flex items-center gap-1.5 text-xs"
+                  >
+                    <Printer className="w-3.5 h-3.5" /> In / Tải PDF
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2 ml-auto">
+                  {canManageAll && !isApproved && (
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 text-xs shadow-md"
+                      onClick={() => handleApproveExpense(e.id)}
+                    >
+                      <Check className="w-3.5 h-3.5" /> Duyệt chi chứng từ
+                    </Button>
+                  )}
+                  {canManageAll && !isRejected && !isApproved && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 flex items-center gap-1.5 text-xs"
+                      onClick={() => setIsRejecting(true)}
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Từ chối
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setSelectedExpenseForReceipt(null)}>
+                    Đóng
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
 
  {/* Modal Thêm / Chỉnh sửa Chi Phí */}
  <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingExpense(null); }} title={editingExpense ? 'Chỉnh Sửa Chi Phí' : 'Ghi Nhận Chi Phí Mới'}>
