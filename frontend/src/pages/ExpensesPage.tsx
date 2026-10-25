@@ -766,7 +766,45 @@ export const ExpensesPage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      window.print();
+                      const printContent = document.getElementById('invoice-printable-area');
+                      if (!printContent) return;
+                      const printWindow = window.open('', '_blank', 'width=850,height=900');
+                      if (!printWindow) {
+                        window.print();
+                        return;
+                      }
+                      printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                          <head>
+                            <title>Hoa_Don_Dien_Tu_${(e.invoice_number || 'HD').replace(/[^a-zA-Z0-9]/g, '')}</title>
+                            <meta charset="utf-8" />
+                            <meta name="viewport" content="width=device-width, initial-scale=1" />
+                            <script src="https://cdn.tailwindcss.com"></script>
+                            <style>
+                              @page { size: A4 portrait; margin: 12mm; }
+                              body { background: white; margin: 0; padding: 15px; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+                              #invoice-printable-area { border: 2px dashed #94a3b8; border-radius: 1rem; padding: 1.5rem; background: white; }
+                              @media print {
+                                body { padding: 0; }
+                                #invoice-printable-area { border: 2px dashed #94a3b8; box-shadow: none; }
+                              }
+                            </style>
+                          </head>
+                          <body>
+                            ${printContent.outerHTML}
+                            <script>
+                              window.onload = function() {
+                                setTimeout(function() {
+                                  window.print();
+                                  setTimeout(function() { window.close(); }, 500);
+                                }, 300);
+                              };
+                            </script>
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
                     }}
                     className="flex items-center gap-1.5 text-xs"
                   >
