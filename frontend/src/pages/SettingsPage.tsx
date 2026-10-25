@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import {
  Settings, ShieldCheck, Server, ExternalLink, UserCheck, Bell, Database,
@@ -11,6 +12,37 @@ import { UserRole } from '../types';
 import { useToast } from '../components/ui/Toast';
 
 type TabKey = 'general' | 'rules' | 'masterdata' | 'rbac' | 'integrations' | 'audit';
+
+// URL slug <-> TabKey mapping
+const SLUG_TO_TAB: Record<string, TabKey> = {
+  'tongquan': 'general',
+  'tong-quan': 'general',
+  'general': 'general',
+  'dinhmuc': 'rules',
+  'dinh-muc': 'rules',
+  'rules': 'rules',
+  'danhmuc': 'masterdata',
+  'danh-muc': 'masterdata',
+  'masterdata': 'masterdata',
+  'phanquyen': 'rbac',
+  'phan-quyen': 'rbac',
+  'rbac': 'rbac',
+  'tichhop': 'integrations',
+  'tich-hop': 'integrations',
+  'integrations': 'integrations',
+  'nhatky': 'audit',
+  'nhat-ky': 'audit',
+  'audit': 'audit',
+};
+
+const TAB_TO_SLUG: Record<TabKey, string> = {
+  general: 'tong-quan',
+  rules: 'dinh-muc',
+  masterdata: 'danh-muc',
+  rbac: 'phan-quyen',
+  integrations: 'tich-hop',
+  audit: 'nhat-ky',
+};
 
 // ============== MOCK DATA ==============
 const MOCK_AUDIT_LOGS = [
@@ -85,7 +117,29 @@ const RBAC_MATRIX = [
 export const SettingsPage: React.FC = () => {
  const { user, switchRole } = useAuth();
  const { success } = useToast();
- const [activeTab, setActiveTab] = useState<TabKey>('general');
+ const { tab: tabParam } = useParams<{ tab?: string }>();
+ const navigate = useNavigate();
+
+ // Resolve initial tab from URL param (supports tongquan, tong-quan, general, dinhmuc, etc.)
+ const resolvedTab = (tabParam && SLUG_TO_TAB[tabParam.toLowerCase()]) ? SLUG_TO_TAB[tabParam.toLowerCase()] : 'general';
+ const [activeTab, setActiveTab] = useState<TabKey>(resolvedTab);
+
+ // Sync state if URL changes (e.g. back/forward buttons or direct navigation)
+ useEffect(() => {
+   if (tabParam && SLUG_TO_TAB[tabParam.toLowerCase()]) {
+     const target = SLUG_TO_TAB[tabParam.toLowerCase()];
+     if (target !== activeTab) {
+       setActiveTab(target);
+     }
+   } else if (!tabParam && activeTab !== 'general') {
+     setActiveTab('general');
+   }
+ }, [tabParam]);
+
+ const handleTabChange = (key: TabKey) => {
+   setActiveTab(key);
+   navigate('/settings/' + TAB_TO_SLUG[key], { replace: true });
+ };
 
  // Real Audit log states
  const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -185,7 +239,7 @@ export const SettingsPage: React.FC = () => {
  {tabs.map(t => (
  <button
  key={t.key}
- onClick={() => setActiveTab(t.key)}
+ onClick={() => handleTabChange(t.key)}
  className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all shrink-0 ${
  activeTab === t.key
  ? 'bg-blue-600 text-white shadow-md'

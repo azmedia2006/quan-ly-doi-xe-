@@ -65,6 +65,7 @@ export const App: React.FC = () => {
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings/:tab" element={<SettingsPage />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
