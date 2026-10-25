@@ -1,5 +1,6 @@
 // UPDATE: Bổ sung Quick Stats, Filter Chips, Approval Status, ODO, Trip Link, Receipt, Edit/Delete safety
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Fuel, Plus, Search, Trash2, ReceiptText, ShieldCheck, Pencil, DollarSign, FileCheck2, AlertTriangle, Paperclip, MapPin, Gauge, CheckCircle, Clock, Image, QrCode, Download, XCircle, Check, Printer } from 'lucide-react';
 import api from '../services/api';
 import { Expense, Vehicle, Driver } from '../types';
@@ -689,7 +690,14 @@ export const ExpensesPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-bold text-slate-600">Tra cứu hóa đơn điện tử trực tuyến:</p>
-                      <p className="font-mono text-blue-600 underline">https://tracuu.vetc.com.vn/hd/{e.invoice_number || '0088992'}</p>
+                      <a
+                        href={`${window.location.origin}/expenses?lookup=${encodeURIComponent(e.invoice_number || '0088992')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono text-blue-600 underline hover:text-blue-700 break-all"
+                      >
+                        {window.location.origin}/expenses?lookup={e.invoice_number || '0088992'}
+                      </a>
                       <p>Mã tra cứu bí mật: <strong>A89K-X92D-PL90</strong></p>
                     </div>
                   </div>
