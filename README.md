@@ -134,7 +134,7 @@ Toàn bộ hệ sinh thái dịch vụ được điều phối thống nhất th
 | **Cài Đặt & Giám Sát (Settings)** | `https://thi.azmedia247.com/settings` | `443` | Cấu hình định mức, danh mục, SMTP, audit logs |
 | **Tài liệu Swagger / OpenAPI 3.0** | `https://thi.azmedia247.com/api/docs/` | `443` | Xem, tra cứu và test trực tiếp toàn bộ REST API |
 | **pgAdmin 4 (Quản trị Database)** | `https://thi.azmedia247.com/pgadmin/` | `443` | Email: `admin@fleet.com` / Pass: `FleetAdmin2026!Secure` |
-| **Grafana Monitoring & Explore** | `https://thi.azmedia247.com/grafana/` hoặc `/grafana/explore` | `443` | Tự động đăng nhập Admin (Không cần mật khẩu) |
+| **Grafana Monitoring & Explore** | `https://thi.azmedia247.com/grafana/` hoặc `/grafana/explore` | `443` | Bắt buộc đăng nhập: `admin` / `admin` |
 | **Prometheus Metrics Engine** | `https://thi.azmedia247.com/prometheus/` | `443` | Giao diện PromQL & Status Targets |
 | **Loki Centralized Logging** | `http://180.93.114.74:3100` | `3100` | Cổng lưu trữ và truy vấn LogQL |
 
@@ -206,7 +206,7 @@ Hệ thống đã nạp sẵn dữ liệu mẫu thực tế. Có thể đăng nh
 ## 7. Hướng Dẫn Giám Sát & Quản Trị Hệ Thống (DevOps)
 
 ### 7.1. Truy vấn Log tập trung Loki bằng LogQL (Yêu cầu đề tài: ít nhất 2–3 query)
-Truy cập **Grafana Explore** trực tiếp tại: **`https://thi.azmedia247.com/grafana/explore`** (Đã kích hoạt tự động đăng nhập Admin và tích hợp sẵn Data Source **Loki** & **Prometheus**):
+Truy cập **Grafana Explore** tại: **`https://thi.azmedia247.com/grafana/explore`** (Đăng nhập tài khoản `admin` / `admin` để truy cập Data Source **Loki** & **Prometheus**):
 
 - **Query 1: Xem toàn bộ Access Log thời gian thực của Nginx Reverse Proxy:**
   ```logql
