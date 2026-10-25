@@ -1,6 +1,6 @@
 // UPDATE: Nâng cấp toàn diện Incidents - Stats, Filters, Claims Stepper, Insurance Details, Attachments, Actions
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Plus, Search, Trash2, Pencil, Wrench, DollarSign, Clock, CheckCircle, Shield, Paperclip, Phone, MapPin, Image } from 'lucide-react';
+import { AlertTriangle, Plus, Search, Trash2, Pencil, Wrench, DollarSign, Clock, CheckCircle, Shield, Paperclip, Phone, MapPin, Image, UploadCloud, X, FileText } from 'lucide-react';
 import api from '../services/api';
 import { Incident, Vehicle, Driver } from '../types';
 import { Modal } from '../components/ui/Modal';
@@ -23,15 +23,85 @@ export const IncidentsPage: React.FC = () => {
  const [filter, setFilter] = useState<IncFilter>('ALL');
  const [editingInc, setEditingInc] = useState<Incident | null>(null);
  const [photoModal, setPhotoModal] = useState<string[] | null>(null);
- const [form, setForm] = useState({ incident_code: '', vehicle: 0, driver: 0, incident_date: new Date().toISOString().slice(0, 16), location: '', severity: 'LOW', description: '', insurance_company: 'Bảo Việt', insurance_policy_number: '', insurance_claim_amount: 0, deductible_amount: 0, claim_percentage: 90, needs_towing: false, status: 'REPORTED' });
+ const [form, setForm] = useState({ incident_code: '', vehicle: 0, driver: 0, incident_date: new Date().toISOString().slice(0, 16), location: '', severity: 'LOW', description: '', insurance_company: 'Bảo Việt', insurance_policy_number: '', insurance_claim_amount: 0, deductible_amount: 0, claim_percentage: 90, needs_towing: false, status: 'REPORTED', evidence_images: '' });
+ const [imageUrls, setImageUrls] = useState<string[]>([]);
  const { success, error } = useToast();
 
  const fetchData = async () => { try { const [i, v, d] = await Promise.all([api.get('/incidents/'), api.get('/vehicles/'), api.get('/drivers/')]); setIncidents(i.data.results || i.data || []); const vl = v.data.results || v.data || []; const dl = d.data.results || d.data || []; setVehicles(vl); setDrivers(dl); if (vl.length > 0) setForm(p => ({ ...p, vehicle: p.vehicle || vl[0].id })); if (dl.length > 0) setForm(p => ({ ...p, driver: p.driver || dl[0].id })); } catch (e) { console.error(e); } };
  useEffect(() => { fetchData(); }, []);
 
- const resetForm = () => setForm({ incident_code: '', vehicle: vehicles[0]?.id || 0, driver: drivers[0]?.id || 0, incident_date: new Date().toISOString().slice(0, 16), location: '', severity: 'LOW', description: '', insurance_company: 'Bảo Việt', insurance_policy_number: '', insurance_claim_amount: 0, deductible_amount: 0, claim_percentage: 90, needs_towing: false, status: 'REPORTED' });
+ const resetForm = () => {
+   setForm({
+     incident_code: `INC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+     vehicle: vehicles[0]?.id || 0,
+     driver: drivers[0]?.id || 0,
+     incident_date: new Date().toISOString().slice(0, 16),
+     location: '',
+     severity: 'LOW',
+     description: '',
+     insurance_company: 'Bảo Việt',
+     insurance_policy_number: '',
+     insurance_claim_amount: 0,
+     deductible_amount: 0,
+     claim_percentage: 90,
+     needs_towing: false,
+     status: 'REPORTED',
+     evidence_images: '',
+   });
+   setImageUrls([]);
+ };
  const handleOpenCreate = () => { setEditingInc(null); resetForm(); setIsModalOpen(true); };
- const handleEdit = (inc: Incident) => { setEditingInc(inc); setForm({ incident_code: inc.incident_code, vehicle: inc.vehicle, driver: inc.driver || 0, incident_date: inc.incident_date?.slice(0, 16) || '', location: inc.location, severity: inc.severity, description: inc.description, insurance_company: inc.insurance_company || 'Bảo Việt', insurance_policy_number: inc.insurance_policy_number || '', insurance_claim_amount: Number(inc.insurance_claim_amount), deductible_amount: Number(inc.deductible_amount || 0), claim_percentage: inc.claim_percentage || 90, needs_towing: inc.needs_towing || false, status: inc.status }); setIsModalOpen(true); };
+ const handleEdit = (inc: Incident) => {
+   setEditingInc(inc);
+   const existingImgs = inc.evidence_images ? inc.evidence_images.split(',').map(s => s.trim()).filter(Boolean) : [];
+   setImageUrls(existingImgs);
+   setForm({
+     incident_code: inc.incident_code,
+     vehicle: inc.vehicle,
+     driver: inc.driver || 0,
+     incident_date: inc.incident_date?.slice(0, 16) || '',
+     location: inc.location,
+     severity: inc.severity,
+     description: inc.description,
+     insurance_company: inc.insurance_company || 'Bảo Việt',
+     insurance_policy_number: inc.insurance_policy_number || '',
+     insurance_claim_amount: Number(inc.insurance_claim_amount),
+     deductible_amount: Number(inc.deductible_amount || 0),
+     claim_percentage: inc.claim_percentage || 90,
+     needs_towing: inc.needs_towing || false,
+     status: inc.status,
+     evidence_images: inc.evidence_images || '',
+   });
+   setIsModalOpen(true);
+ };
+ 
+ const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const files = e.target.files;
+   if (!files || files.length === 0) return;
+
+   Array.from(files).forEach(file => {
+     const reader = new FileReader();
+     reader.onloadend = () => {
+       if (reader.result) {
+         setImageUrls(prev => {
+           const updated = [...prev, reader.result as string];
+           setForm(f => ({ ...f, evidence_images: updated.join(',') }));
+           return updated;
+         });
+       }
+     };
+     reader.readAsDataURL(file);
+   });
+ };
+
+ const handleRemoveImage = (indexToRemove: number) => {
+   setImageUrls(prev => {
+     const updated = prev.filter((_, idx) => idx !== indexToRemove);
+     setForm(f => ({ ...f, evidence_images: updated.join(',') }));
+     return updated;
+   });
+ };
+
  const handleCreate = async (e: React.FormEvent) => { e.preventDefault(); try { await api.post('/incidents/', form); success('Báo cáo sự cố thành công!'); setIsModalOpen(false); fetchData(); } catch { error('Lỗi lưu sự cố'); } };
  const handleUpdate = async (e: React.FormEvent) => { e.preventDefault(); if (!editingInc) return; try { await api.put(`/incidents/${editingInc.id}/`, form); success('Cập nhật sự cố thành công!'); setIsModalOpen(false); setEditingInc(null); fetchData(); } catch { error('Lỗi cập nhật'); } };
  const handleDelete = async (id: number) => { if (!window.confirm('Xóa bản ghi sự cố này?')) return; try { await api.delete(`/incidents/${id}/`); success('Đã xóa sự cố'); fetchData(); } catch { error('Lỗi xóa sự cố'); } };
@@ -202,6 +272,59 @@ export const IncidentsPage: React.FC = () => {
  <Input label="Tỷ lệ BH (%)" type="number" value={form.claim_percentage} onChange={e => setForm({ ...form, claim_percentage: parseInt(e.target.value) || 0 })} />
  </div>
  <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={form.needs_towing} onChange={e => setForm({ ...form, needs_towing: e.target.checked })} className="rounded" /> Cần xe cẩu cứu hộ</label>
+
+        {/* VÙNG TẢI ẢNH HIỆN TRƯỜNG & BIÊN BẢN (HỖ TRỢ NHIỀU ẢNH) */}
+        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <Image className="w-4 h-4 text-blue-600" /> Ảnh hiện trường, va quẹt & Biên bản CSGT
+            </label>
+            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+              Đã chọn: {imageUrls.length} ảnh
+            </span>
+          </div>
+
+          {/* Upload Dropzone */}
+          <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-blue-300 dark:border-blue-800 rounded-2xl bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer group text-center">
+            <UploadCloud className="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform mb-1.5" />
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              Bấm để chọn nhiều ảnh hiện trường hoặc kéo thả vào đây
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              Hỗ trợ PNG, JPG, JPEG, WEBP (chọn nhiều ảnh cùng lúc từ camera / thư viện điện thoại)
+            </p>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={handleAddFiles}
+            />
+          </label>
+
+          {/* Preview Gallery */}
+          {imageUrls.length > 0 && (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 pt-2">
+              {imageUrls.map((img, idx) => (
+                <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-square bg-slate-100 dark:bg-slate-800 shadow-xs">
+                  <img src={img} alt={`Hiện trường ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(idx)}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-md"
+                    title="Xóa ảnh này"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <span className="absolute bottom-1 left-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-black/60 text-white">
+                    #{idx + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
  <div className="pt-3 flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => { setIsModalOpen(false); setEditingInc(null); }}>Hủy</Button>
  <Button type="submit" className="w-full sm:w-auto">{editingInc ? 'Cập Nhật' : 'Gửi Báo Cáo'}</Button>
