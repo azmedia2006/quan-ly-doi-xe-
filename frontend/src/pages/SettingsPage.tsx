@@ -407,13 +407,7 @@ export const SettingsPage: React.FC = () => {
  {/* ========== TAB: TÍCH HỢP API ========== */}
  {activeTab === 'integrations' && (
  <div className="space-y-4 sm:space-y-6">
- <div className={cardCls}>
- <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"><Globe className="w-4 h-4 text-blue-500" /> Kết Nối Bản Đồ (Maps API)</h3>
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
- <div><label className={labelCls}>Google Maps API Key</label><input type="password" value={mapsApiKey} onChange={e => setMapsApiKey(e.target.value)} placeholder="AIzaSy...." className={inputCls} /></div>
- <div className="flex items-end"><button onClick={() => success('Kết nối Google Maps API thành công!')} className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Kiểm tra kết nối</button></div>
- </div>
- </div>
+
 
  <div className={cardCls}>
  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"><Send className="w-4 h-4 text-blue-500" /> Webhook Thông Báo Tự Động (Telegram)</h3>
